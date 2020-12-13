@@ -3,7 +3,7 @@ export GO111MODULE=on
 
 .PHONY: test
 test:
-	go test ./pkg/... ./cmd/... -coverprofile cover.out
+	go test ./cmd/... -coverprofile cover.out
 
 .PHONY: bin
 bin: fmt vet
@@ -11,11 +11,11 @@ bin: fmt vet
 
 .PHONY: fmt
 fmt:
-	go fmt ./pkg/... ./cmd/...
+	go fmt ./cmd/...
 
 .PHONY: vet
 vet:
-	go vet ./pkg/... ./cmd/...
+	go vet ./cmd/...
 
 .PHONY: kubernetes-deps
 kubernetes-deps:

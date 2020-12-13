@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	// "github.com/akrzos/k8sCube/pkg/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -17,7 +16,7 @@ var (
 var rootCmd = &cobra.Command{
 	Use:           "capacity",
 	Short:         "Get Cluster Capacity",
-	Long:          `long description`,
+	Long:          `Capacity gathers and displays capacity data from your kubernetes cluster.`,
 	SilenceErrors: true,
 	SilenceUsage:  true,
 	PreRun: func(cmd *cobra.Command, args []string) {
@@ -34,4 +33,9 @@ func Execute() {
 
 func initConfig() {
 	viper.AutomaticEnv()
+}
+
+func init() {
+	KubernetesConfigFlags = genericclioptions.NewConfigFlags(false)
+	KubernetesConfigFlags.AddFlags(rootCmd.PersistentFlags())
 }
