@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/akrzos/k8sCube/cmd"
+	"github.com/akrzos/kubeSize/cmd"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp" // required for GKE
 )
 

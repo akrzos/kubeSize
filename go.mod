@@ -1,10 +1,9 @@
-module github.com/akrzos/k8sCube
+module github.com/akrzos/kubeSize
 
 go 1.12
 
 require (
 	github.com/evanphx/json-patch v4.5.0+incompatible // indirect
-	github.com/fatih/color v1.7.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/google/gofuzz v1.0.0 // indirect
 	github.com/googleapis/gnostic v0.3.1 // indirect
@@ -12,7 +11,6 @@ require (
 	github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7 // indirect
 	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/magiconair/properties v1.8.4 // indirect
-	github.com/mattn/go-isatty v0.0.7 // indirect
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect

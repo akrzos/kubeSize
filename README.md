@@ -1,4 +1,4 @@
-# k8sCube
+# kubeSize
 
 Test project to plugin to kubectl and reveal k8s capacity data.
 
@@ -10,7 +10,7 @@ Test project to plugin to kubectl and reveal k8s capacity data.
 $ make bin
 ```
 
-## Test
+## Run
 
 ```
 $ ./bin/capacity
