@@ -1,6 +1,6 @@
 # kubeSize
 
-Test project to plugin to kubectl and reveal k8s capacity data.
+kubeSize is a kubernetes CLI plugin to easily expose sizing and capacity data for Kubernetes clusters.
 
 # Develop
 
@@ -16,7 +16,7 @@ $ make bin
 $ ./bin/capacity
 ```
 
-## Set as a plugin
+## Install as a plugin
 
 ```
 cp bin/capacity /usr/local/bin/kubectl-capacity
