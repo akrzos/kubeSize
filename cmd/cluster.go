@@ -59,9 +59,19 @@ var clusterCmd = &cobra.Command{
 		var totalCapacityPods, totalCapacityCPU, totalCapacityMemory resource.Quantity
 		var totalAllocatablePods, totalAllocatableCPU, totalAllocatableMemory resource.Quantity
 		var totalRequestsCPU, totalLimitsCPU, totalRequestsMemory, totalLimitsMemory resource.Quantity
+		var totalNodeCount, totalReadyNodeCount, totalUnreadyNodeCount, totalUnschedulableNodeCount = 0, 0, 0, 0
 		var totalPodCount, totalNonTermPodCount = 0, 0
 
 		for _, v := range nodes.Items {
+			totalNodeCount++
+			for _, condition := range v.Status.Conditions {
+				if (condition.Type == "Ready") && condition.Status == corev1.ConditionTrue {
+					totalReadyNodeCount++
+				}
+			}
+			if v.Spec.Unschedulable {
+				totalUnschedulableNodeCount++
+			}
 			totalCapacityPods.Add(*v.Status.Capacity.Pods())
 			totalCapacityCPU.Add(*v.Status.Capacity.Cpu())
 			totalCapacityMemory.Add(*v.Status.Capacity.Memory())
@@ -69,6 +79,7 @@ var clusterCmd = &cobra.Command{
 			totalAllocatableCPU.Add(*v.Status.Allocatable.Cpu())
 			totalAllocatableMemory.Add(*v.Status.Allocatable.Memory())
 		}
+		totalUnreadyNodeCount = totalNodeCount - totalReadyNodeCount
 
 		totalPodsList, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
 		totalPodCount = len(totalPodsList.Items)
@@ -92,12 +103,11 @@ var clusterCmd = &cobra.Command{
 		var capacityMemoryGiB = float64(totalCapacityMemory.Value()) / 1024 / 1024 / 1024
 		var allocatableMemoryGiB = float64(totalAllocatableMemory.Value()) / 1024 / 1024 / 1024
 
-		fmt.Printf("Total Cluster Capacity\n")
-
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 0, 5, 1, ' ', 0)
-		fmt.Fprintln(w, "PODS\t\t\t\tCPU\t\t\t\tMEMORY\t\t")
-		fmt.Fprintln(w, "Capacity\tAllocatable\tTotal\tNon-Term\tCapacity\tAllocatable\tRequests\tLimits\tCapacity\tAllocatable\tRequests\tLimits")
+		fmt.Fprintln(w, "NODES\t\t\t\tPODS\t\t\t\tCPU\t\t\t\tMEMORY\t\t")
+		fmt.Fprintln(w, "Total\tReady\tUnready\tUnschedulable\tCapacity\tAllocatable\tTotal\tNon-Term\tCapacity\tAllocatable\tRequests\tLimits\tCapacity\tAllocatable\tRequests\tLimits")
+		fmt.Fprintf(w, "%d\t%d\t%d\t%d\t", totalNodeCount, totalReadyNodeCount, totalUnreadyNodeCount, totalUnschedulableNodeCount)
 		fmt.Fprintf(w, "%s\t%s\t", &totalCapacityPods, &totalAllocatablePods)
 		fmt.Fprintf(w, "%d\t%d\t", totalPodCount, totalNonTermPodCount)
 		fmt.Fprintf(w, "%s\t%s\t", &totalCapacityCPU, &totalAllocatableCPU)

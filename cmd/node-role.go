@@ -32,18 +32,22 @@ import (
 )
 
 type RoleCapacityData struct {
-	totalCapacityPods      resource.Quantity
-	totalCapacityCPU       resource.Quantity
-	totalCapacityMemory    resource.Quantity
-	totalAllocatablePods   resource.Quantity
-	totalAllocatableCPU    resource.Quantity
-	totalAllocatableMemory resource.Quantity
-	totalRequestsCPU       resource.Quantity
-	totalLimitsCPU         resource.Quantity
-	totalRequestsMemory    resource.Quantity
-	totalLimitsMemory      resource.Quantity
-	totalPodCount          int
-	totalNonTermPodCount   int
+	totalNodeCount              int
+	totalReadyNodeCount         int
+	totalUnreadyNodeCount       int
+	totalUnschedulableNodeCount int
+	totalCapacityPods           resource.Quantity
+	totalCapacityCPU            resource.Quantity
+	totalCapacityMemory         resource.Quantity
+	totalAllocatablePods        resource.Quantity
+	totalAllocatableCPU         resource.Quantity
+	totalAllocatableMemory      resource.Quantity
+	totalRequestsCPU            resource.Quantity
+	totalLimitsCPU              resource.Quantity
+	totalRequestsMemory         resource.Quantity
+	totalLimitsMemory           resource.Quantity
+	totalPodCount               int
+	totalNonTermPodCount        int
 }
 
 var nodeRoleCmd = &cobra.Command{
@@ -113,6 +117,16 @@ var nodeRoleCmd = &cobra.Command{
 
 			for role := range roles {
 				if nodeRoleData, ok := nodeRoleCapacityData[role]; ok {
+					nodeRoleData.totalNodeCount++
+					for _, condition := range v.Status.Conditions {
+						if (condition.Type == "Ready") && condition.Status == corev1.ConditionTrue {
+							nodeRoleData.totalReadyNodeCount++
+						}
+					}
+					nodeRoleData.totalUnreadyNodeCount = nodeRoleData.totalNodeCount - nodeRoleData.totalReadyNodeCount
+					if v.Spec.Unschedulable {
+						nodeRoleData.totalUnschedulableNodeCount++
+					}
 					nodeRoleData.totalCapacityPods.Add(*v.Status.Capacity.Pods())
 					nodeRoleData.totalCapacityCPU.Add(*v.Status.Capacity.Cpu())
 					nodeRoleData.totalCapacityMemory.Add(*v.Status.Capacity.Memory())
@@ -127,6 +141,16 @@ var nodeRoleCmd = &cobra.Command{
 					nodeRoleData.totalNonTermPodCount += nonTerminatedPodCount
 				} else {
 					newNodeRoleCapacityData := new(RoleCapacityData)
+					newNodeRoleCapacityData.totalNodeCount = 1
+					for _, condition := range v.Status.Conditions {
+						if (condition.Type == "Ready") && condition.Status == corev1.ConditionTrue {
+							newNodeRoleCapacityData.totalReadyNodeCount = 1
+							newNodeRoleCapacityData.totalUnreadyNodeCount = 0
+						}
+					}
+					if v.Spec.Unschedulable {
+						newNodeRoleCapacityData.totalUnschedulableNodeCount = 1
+					}
 					newNodeRoleCapacityData.totalCapacityPods.Add(*v.Status.Capacity.Pods())
 					newNodeRoleCapacityData.totalCapacityCPU.Add(*v.Status.Capacity.Cpu())
 					newNodeRoleCapacityData.totalCapacityMemory.Add(*v.Status.Capacity.Memory())
@@ -145,15 +169,14 @@ var nodeRoleCmd = &cobra.Command{
 
 		}
 
-		fmt.Printf("Node-Role Capacity\n")
-
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 0, 5, 1, ' ', 0)
-		fmt.Fprintln(w, "ROLE\tPODS\t\t\t\tCPU\t\t\t\tMEMORY\t\t")
-		fmt.Fprintln(w, "\tCapacity\tAllocatable\tTotal\tNon-Term\tCapacity\tAllocatable\tRequests\tLimits\tCapacity\tAllocatable\tRequests\tLimits")
+		fmt.Fprintln(w, "ROLE\tNODES\t\t\t\tPODS\t\t\t\tCPU\t\t\t\tMEMORY\t\t")
+		fmt.Fprintln(w, "\tTotal\tReady\tUnready\tUnschedulable\tCapacity\tAllocatable\tTotal\tNon-Term\tCapacity\tAllocatable\tRequests\tLimits\tCapacity\tAllocatable\tRequests\tLimits")
 
 		for key, v := range nodeRoleCapacityData {
 			fmt.Fprintf(w, "%s\t", key)
+			fmt.Fprintf(w, "%d\t%d\t%d\t%d\t", v.totalNodeCount, v.totalReadyNodeCount, v.totalUnreadyNodeCount, v.totalUnschedulableNodeCount)
 			fmt.Fprintf(w, "%s\t%s\t", &v.totalCapacityPods, &v.totalAllocatablePods)
 			fmt.Fprintf(w, "%d\t%d\t", v.totalPodCount, v.totalNonTermPodCount)
 			fmt.Fprintf(w, "%s\t%s\t", &v.totalCapacityCPU, &v.totalAllocatableCPU)

@@ -58,8 +58,6 @@ var nodeCmd = &cobra.Command{
 			return errors.Wrap(err, "failed to list nodes")
 		}
 
-		fmt.Printf("Node Capacity\n")
-
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 0, 5, 1, ' ', 0)
 		fmt.Fprintln(w, "NAME\tROLES\tPODS\t\t\t\tCPU\t\t\t\tMEMORY\t\t")
