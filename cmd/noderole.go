@@ -18,6 +18,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 	"text/tabwriter"
 
@@ -36,6 +37,8 @@ type RoleCapacityData struct {
 	totalReadyNodeCount         int
 	totalUnreadyNodeCount       int
 	totalUnschedulableNodeCount int
+	totalPodCount               int
+	totalNonTermPodCount        int
 	totalCapacityPods           resource.Quantity
 	totalCapacityCPU            resource.Quantity
 	totalCapacityMemory         resource.Quantity
@@ -46,14 +49,12 @@ type RoleCapacityData struct {
 	totalLimitsCPU              resource.Quantity
 	totalRequestsMemory         resource.Quantity
 	totalLimitsMemory           resource.Quantity
-	totalPodCount               int
-	totalNonTermPodCount        int
 }
 
 var nodeRoleCmd = &cobra.Command{
 	Use:   "node-role",
-	Short: "Get cluster capacity groups by node role.",
-	Long:  `.`,
+	Short: "Get cluster capacity grouped by node role",
+	Long:  `Get Kubernetes cluster size and capacity metrics grouped by node role`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		config, err := KubernetesConfigFlags.ToRESTConfig()
@@ -72,6 +73,7 @@ var nodeRoleCmd = &cobra.Command{
 		}
 
 		nodeRoleCapacityData := make(map[string]*RoleCapacityData)
+		sortedRoleNames := make([]string, 0)
 
 		for _, v := range nodes.Items {
 
@@ -104,14 +106,14 @@ var nodeRoleCmd = &cobra.Command{
 			totalNonTermPodsList, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{FieldSelector: nonTerminatedFieldSelector.String()})
 			nonTerminatedPodCount := len(totalNonTermPodsList.Items)
 
-			var totalCPURequests, totalCPULimits, totalMemoryRequests, totalMemoryLimits resource.Quantity
+			var totalRequestsCPU, totalLimitssCPU, totalRequestsMemory, totalLimitsMemory resource.Quantity
 
 			for _, pod := range totalNonTermPodsList.Items {
 				for _, container := range pod.Spec.Containers {
-					totalCPURequests.Add(*container.Resources.Requests.Cpu())
-					totalCPULimits.Add(*container.Resources.Limits.Cpu())
-					totalMemoryRequests.Add(*container.Resources.Requests.Memory())
-					totalMemoryLimits.Add(*container.Resources.Limits.Memory())
+					totalRequestsCPU.Add(*container.Resources.Requests.Cpu())
+					totalLimitssCPU.Add(*container.Resources.Limits.Cpu())
+					totalRequestsMemory.Add(*container.Resources.Requests.Memory())
+					totalLimitsMemory.Add(*container.Resources.Limits.Memory())
 				}
 			}
 
@@ -133,13 +135,14 @@ var nodeRoleCmd = &cobra.Command{
 					nodeRoleData.totalAllocatablePods.Add(*v.Status.Allocatable.Pods())
 					nodeRoleData.totalAllocatableCPU.Add(*v.Status.Allocatable.Cpu())
 					nodeRoleData.totalAllocatableMemory.Add(*v.Status.Allocatable.Memory())
-					nodeRoleData.totalRequestsCPU.Add(totalCPURequests)
-					nodeRoleData.totalLimitsCPU.Add(totalCPULimits)
-					nodeRoleData.totalRequestsMemory.Add(totalMemoryRequests)
-					nodeRoleData.totalLimitsMemory.Add(totalMemoryLimits)
+					nodeRoleData.totalRequestsCPU.Add(totalRequestsCPU)
+					nodeRoleData.totalLimitsCPU.Add(totalLimitssCPU)
+					nodeRoleData.totalRequestsMemory.Add(totalRequestsMemory)
+					nodeRoleData.totalLimitsMemory.Add(totalLimitsMemory)
 					nodeRoleData.totalPodCount += totalPodCount
 					nodeRoleData.totalNonTermPodCount += nonTerminatedPodCount
 				} else {
+					sortedRoleNames = append(sortedRoleNames, role)
 					newNodeRoleCapacityData := new(RoleCapacityData)
 					newNodeRoleCapacityData.totalNodeCount = 1
 					for _, condition := range v.Status.Conditions {
@@ -157,10 +160,10 @@ var nodeRoleCmd = &cobra.Command{
 					newNodeRoleCapacityData.totalAllocatablePods.Add(*v.Status.Allocatable.Pods())
 					newNodeRoleCapacityData.totalAllocatableCPU.Add(*v.Status.Allocatable.Cpu())
 					newNodeRoleCapacityData.totalAllocatableMemory.Add(*v.Status.Allocatable.Memory())
-					newNodeRoleCapacityData.totalRequestsCPU.Add(totalCPURequests)
-					newNodeRoleCapacityData.totalLimitsCPU.Add(totalCPULimits)
-					newNodeRoleCapacityData.totalRequestsMemory.Add(totalMemoryRequests)
-					newNodeRoleCapacityData.totalLimitsMemory.Add(totalMemoryLimits)
+					newNodeRoleCapacityData.totalRequestsCPU.Add(totalRequestsCPU)
+					newNodeRoleCapacityData.totalLimitsCPU.Add(totalLimitssCPU)
+					newNodeRoleCapacityData.totalRequestsMemory.Add(totalRequestsMemory)
+					newNodeRoleCapacityData.totalLimitsMemory.Add(totalLimitsMemory)
 					newNodeRoleCapacityData.totalPodCount += totalPodCount
 					newNodeRoleCapacityData.totalNonTermPodCount += nonTerminatedPodCount
 					nodeRoleCapacityData[role] = newNodeRoleCapacityData
@@ -169,20 +172,35 @@ var nodeRoleCmd = &cobra.Command{
 
 		}
 
+		displayReadable, _ := cmd.Flags().GetBool("readable")
+
+		sort.Strings(sortedRoleNames)
+
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 0, 5, 1, ' ', 0)
-		fmt.Fprintln(w, "ROLE\tNODES\t\t\t\tPODS\t\t\t\tCPU\t\t\t\tMEMORY\t\t")
+		if displayReadable == true {
+			fmt.Fprintln(w, "ROLE\tNODES\t\t\t\tPODS\t\t\t\tCPU (cores)\t\t\t\tMEMORY (GiB)\t\t")
+		} else {
+			fmt.Fprintln(w, "ROLE\tNODES\t\t\t\tPODS\t\t\t\tCPU\t\t\t\tMEMORY\t\t")
+		}
 		fmt.Fprintln(w, "\tTotal\tReady\tUnready\tUnschedulable\tCapacity\tAllocatable\tTotal\tNon-Term\tCapacity\tAllocatable\tRequests\tLimits\tCapacity\tAllocatable\tRequests\tLimits")
 
-		for key, v := range nodeRoleCapacityData {
-			fmt.Fprintf(w, "%s\t", key)
-			fmt.Fprintf(w, "%d\t%d\t%d\t%d\t", v.totalNodeCount, v.totalReadyNodeCount, v.totalUnreadyNodeCount, v.totalUnschedulableNodeCount)
-			fmt.Fprintf(w, "%s\t%s\t", &v.totalCapacityPods, &v.totalAllocatablePods)
-			fmt.Fprintf(w, "%d\t%d\t", v.totalPodCount, v.totalNonTermPodCount)
-			fmt.Fprintf(w, "%s\t%s\t", &v.totalCapacityCPU, &v.totalAllocatableCPU)
-			fmt.Fprintf(w, "%s\t%s\t", &v.totalRequestsCPU, &v.totalLimitsCPU)
-			fmt.Fprintf(w, "%.1f\t%.1f\t", float64(v.totalCapacityMemory.Value())/1024/1024/1024, float64(v.totalAllocatableMemory.Value())/1024/1024/1024)
-			fmt.Fprintf(w, "%s\t%s\t\n", &v.totalRequestsMemory, &v.totalLimitsMemory)
+		for _, k := range sortedRoleNames {
+			fmt.Fprintf(w, "%s\t", k)
+			fmt.Fprintf(w, "%d\t%d\t%d\t%d\t", nodeRoleCapacityData[k].totalNodeCount, nodeRoleCapacityData[k].totalReadyNodeCount, nodeRoleCapacityData[k].totalUnreadyNodeCount, nodeRoleCapacityData[k].totalUnschedulableNodeCount)
+			fmt.Fprintf(w, "%s\t%s\t", &nodeRoleCapacityData[k].totalCapacityPods, &nodeRoleCapacityData[k].totalAllocatablePods)
+			fmt.Fprintf(w, "%d\t%d\t", nodeRoleCapacityData[k].totalPodCount, nodeRoleCapacityData[k].totalNonTermPodCount)
+			if displayReadable == true {
+				fmt.Fprintf(w, "%.1f\t%.1f\t", float64(nodeRoleCapacityData[k].totalCapacityCPU.MilliValue())/1000, float64(nodeRoleCapacityData[k].totalAllocatableCPU.MilliValue())/1000)
+				fmt.Fprintf(w, "%.1f\t%.1f\t", float64(nodeRoleCapacityData[k].totalRequestsCPU.MilliValue())/1000, float64(nodeRoleCapacityData[k].totalLimitsCPU.MilliValue())/1000)
+				fmt.Fprintf(w, "%.1f\t%.1f\t", float64(nodeRoleCapacityData[k].totalCapacityMemory.Value())/1024/1024/1024, float64(nodeRoleCapacityData[k].totalAllocatableMemory.Value())/1024/1024/1024)
+				fmt.Fprintf(w, "%.1f\t%.1f\t\n", float64(nodeRoleCapacityData[k].totalRequestsMemory.Value())/1024/1024/1024, float64(nodeRoleCapacityData[k].totalLimitsMemory.Value())/1024/1024/1024)
+			} else {
+				fmt.Fprintf(w, "%s\t%s\t", &nodeRoleCapacityData[k].totalCapacityCPU, &nodeRoleCapacityData[k].totalAllocatableCPU)
+				fmt.Fprintf(w, "%s\t%s\t", &nodeRoleCapacityData[k].totalRequestsCPU, &nodeRoleCapacityData[k].totalLimitsCPU)
+				fmt.Fprintf(w, "%s\t%s\t", &nodeRoleCapacityData[k].totalCapacityMemory, &nodeRoleCapacityData[k].totalAllocatableMemory)
+				fmt.Fprintf(w, "%s\t%s\t\n", &nodeRoleCapacityData[k].totalRequestsMemory, &nodeRoleCapacityData[k].totalLimitsMemory)
+			}
 		}
 
 		w.Flush()

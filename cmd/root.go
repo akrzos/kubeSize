@@ -30,8 +30,8 @@ var (
 
 var rootCmd = &cobra.Command{
 	Use:           "capacity",
-	Short:         "Get Cluster Capacity",
-	Long:          `Capacity gathers and displays capacity data from your kubernetes cluster.`,
+	Short:         "Get cluster size and capacity",
+	Long:          `Capacity exposes size and capacity data for Kubernetes clusters`,
 	SilenceErrors: true,
 	SilenceUsage:  true,
 	PreRun: func(cmd *cobra.Command, args []string) {
@@ -53,4 +53,5 @@ func initConfig() {
 func init() {
 	KubernetesConfigFlags = genericclioptions.NewConfigFlags(false)
 	KubernetesConfigFlags.AddFlags(rootCmd.PersistentFlags())
+	rootCmd.PersistentFlags().BoolP("readable", "r", false, "Human readable resources (Memory in GiB)")
 }

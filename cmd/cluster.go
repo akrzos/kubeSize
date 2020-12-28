@@ -32,8 +32,8 @@ import (
 
 var clusterCmd = &cobra.Command{
 	Use:           "cluster",
-	Short:         "Get Cluster Capacity",
-	Long:          `.`,
+	Short:         "Get cluster size and capacity",
+	Long:          `Get Kubernetes cluster size and capacity metrics`,
 	SilenceErrors: true,
 	SilenceUsage:  true,
 	PreRun: func(cmd *cobra.Command, args []string) {
@@ -100,21 +100,30 @@ var clusterCmd = &cobra.Command{
 			}
 		}
 
-		var capacityMemoryGiB = float64(totalCapacityMemory.Value()) / 1024 / 1024 / 1024
-		var allocatableMemoryGiB = float64(totalAllocatableMemory.Value()) / 1024 / 1024 / 1024
+		displayReadable, _ := cmd.Flags().GetBool("readable")
 
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 0, 5, 1, ' ', 0)
-		fmt.Fprintln(w, "NODES\t\t\t\tPODS\t\t\t\tCPU\t\t\t\tMEMORY\t\t")
+		if displayReadable == true {
+			fmt.Fprintln(w, "NODES\t\t\t\tPODS\t\t\t\tCPU (cores)\t\t\t\tMEMORY (GiB)\t\t")
+		} else {
+			fmt.Fprintln(w, "NODES\t\t\t\tPODS\t\t\t\tCPU\t\t\t\tMEMORY\t\t")
+		}
 		fmt.Fprintln(w, "Total\tReady\tUnready\tUnschedulable\tCapacity\tAllocatable\tTotal\tNon-Term\tCapacity\tAllocatable\tRequests\tLimits\tCapacity\tAllocatable\tRequests\tLimits")
 		fmt.Fprintf(w, "%d\t%d\t%d\t%d\t", totalNodeCount, totalReadyNodeCount, totalUnreadyNodeCount, totalUnschedulableNodeCount)
 		fmt.Fprintf(w, "%s\t%s\t", &totalCapacityPods, &totalAllocatablePods)
 		fmt.Fprintf(w, "%d\t%d\t", totalPodCount, totalNonTermPodCount)
-		fmt.Fprintf(w, "%s\t%s\t", &totalCapacityCPU, &totalAllocatableCPU)
-		fmt.Fprintf(w, "%s\t%s\t", &totalRequestsCPU, &totalLimitsCPU)
-		// fmt.Fprintf(w, "%s : %s\t", &totalCapacityMemory, &totalAllocatableMemory)
-		fmt.Fprintf(w, "%.1f\t%.1f\t", capacityMemoryGiB, allocatableMemoryGiB)
-		fmt.Fprintf(w, "%s\t%s\t\n", &totalRequestsMemory, &totalLimitsMemory)
+		if displayReadable == true {
+			fmt.Fprintf(w, "%.1f\t%.1f\t", float64(totalCapacityCPU.MilliValue())/1000, float64(totalAllocatableCPU.MilliValue())/1000)
+			fmt.Fprintf(w, "%.1f\t%.1f\t", float64(totalRequestsCPU.MilliValue())/1000, float64(totalLimitsCPU.MilliValue())/1000)
+			fmt.Fprintf(w, "%.1f\t%.1f\t", float64(totalCapacityMemory.Value())/1024/1024/1024, float64(totalAllocatableMemory.Value())/1024/1024/1024)
+			fmt.Fprintf(w, "%.1f\t%.1f\t\n", float64(totalRequestsMemory.Value())/1024/1024/1024, float64(totalLimitsMemory.Value())/1024/1024/1024)
+		} else {
+			fmt.Fprintf(w, "%s\t%s\t", &totalCapacityCPU, &totalAllocatableCPU)
+			fmt.Fprintf(w, "%s\t%s\t", &totalRequestsCPU, &totalLimitsCPU)
+			fmt.Fprintf(w, "%s\t%s\t", &totalCapacityMemory, &totalAllocatableMemory)
+			fmt.Fprintf(w, "%s\t%s\t\n", &totalRequestsMemory, &totalLimitsMemory)
+		}
 		w.Flush()
 
 		return nil
