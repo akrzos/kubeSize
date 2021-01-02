@@ -55,7 +55,18 @@ var namespaceCmd = &cobra.Command{
 			return errors.Wrap(err, "failed to create clientset")
 		}
 
-		namespaces, err := clientset.CoreV1().Namespaces().List(metav1.ListOptions{})
+		nsFlag, _ := cmd.Flags().GetString("namespace")
+		nsListOptions := metav1.ListOptions{}
+
+		if nsFlag != "" {
+			nsFieldSelector, err := fields.ParseSelector("metadata.name=" + nsFlag)
+			if err != nil {
+				return errors.Wrap(err, "failed to create fieldSelector")
+			}
+			nsListOptions = metav1.ListOptions{FieldSelector: nsFieldSelector.String()}
+		}
+
+		namespaces, err := clientset.CoreV1().Namespaces().List(nsListOptions)
 		if err != nil {
 			return errors.Wrap(err, "failed to list namespaces")
 		}
