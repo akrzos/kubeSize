@@ -26,15 +26,17 @@ cp bin/capacity /usr/local/bin/kubectl-capacity
 
 ```
 $ kubectl capacity
-Capacity gathers and displays capacity data from your kubernetes cluster.
+Capacity exposes size and capacity data for Kubernetes clusters
 
 Usage:
   capacity [command]
 
 Available Commands:
-  cluster     Get Cluster Capacity
+  cluster     Get cluster size and capacity
   help        Help about any command
-  node        Get Node Capacity
+  namespace   Get namespace size
+  node        Get individual node capacity
+  node-role   Get cluster capacity grouped by node role
 
 Flags:
       --as string                      Username to impersonate for the operation
@@ -49,6 +51,7 @@ Flags:
       --insecure-skip-tls-verify       If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
       --kubeconfig string              Path to the kubeconfig file to use for CLI requests.
   -n, --namespace string               If present, the namespace scope for this CLI request
+  -r, --readable                       Human readable resources (CPU in Cores, Memory in GiB)
       --request-timeout string         The length of time to wait before giving up on a single server request. Non-zero values should contain a corresponding time unit (e.g. 1s, 2m, 3h). A value of zero means don't timeout requests. (default "0")
   -s, --server string                  The address and port of the Kubernetes API server
       --token string                   Bearer token for authentication to the API server

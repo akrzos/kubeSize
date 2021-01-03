@@ -13,13 +13,24 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package main
+package kube
 
 import (
-	"github.com/akrzos/kubeSize/cmd/capacity"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp" // required for GKE
+	"github.com/pkg/errors"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/kubernetes"
 )
 
-func main() {
-	capacity.Execute()
+func CreateClientSet(KubernetesConfigFlags *genericclioptions.ConfigFlags) (*kubernetes.Clientset, error) {
+	config, err := KubernetesConfigFlags.ToRESTConfig()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read kubeconfig")
+	}
+
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create clientset")
+	}
+
+	return clientset, nil
 }

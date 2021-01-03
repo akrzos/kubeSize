@@ -1,6 +1,6 @@
 module github.com/akrzos/kubeSize
 
-go 1.12
+go 1.15
 
 require (
 	github.com/evanphx/json-patch v4.5.0+incompatible // indirect

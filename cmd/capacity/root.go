@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 Alex Krzos akrzos@redhat.com
+Copyright © 2021 Alex Krzos akrzos@redhat.com
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+package capacity
 
 import (
 	"fmt"
@@ -53,5 +53,5 @@ func initConfig() {
 func init() {
 	KubernetesConfigFlags = genericclioptions.NewConfigFlags(false)
 	KubernetesConfigFlags.AddFlags(rootCmd.PersistentFlags())
-	rootCmd.PersistentFlags().BoolP("readable", "r", false, "Human readable resources (Memory in GiB)")
+	rootCmd.PersistentFlags().BoolP("readable", "r", false, "Human readable resources (CPU in Cores, Memory in GiB)")
 }
