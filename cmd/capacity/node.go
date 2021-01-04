@@ -16,6 +16,8 @@ limitations under the License.
 package capacity
 
 import (
+	"fmt"
+	"os"
 	"sort"
 	"strings"
 
@@ -38,6 +40,10 @@ var nodeCmd = &cobra.Command{
 	SilenceUsage:  true,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlags(cmd.Flags())
+		if err := output.ValidateOutput(*cmd); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 
@@ -109,9 +115,11 @@ var nodeCmd = &cobra.Command{
 
 		displayReadable, _ := cmd.Flags().GetBool("readable")
 
+		displayFormat, _ := cmd.Flags().GetString("output")
+
 		sort.Strings(sortedNodeNames)
 
-		output.DisplayNodeData(nodesCapacityData, sortedNodeNames, displayReadable)
+		output.DisplayNodeData(nodesCapacityData, sortedNodeNames, displayReadable, displayFormat)
 
 		return nil
 	},

@@ -16,6 +16,8 @@ limitations under the License.
 package capacity
 
 import (
+	"fmt"
+	"os"
 	"sort"
 	"strings"
 
@@ -23,6 +25,7 @@ import (
 	"github.com/akrzos/kubeSize/internal/output"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,6 +37,13 @@ var nodeRoleCmd = &cobra.Command{
 	Use:   "node-role",
 	Short: "Get cluster capacity grouped by node role",
 	Long:  `Get Kubernetes cluster size and capacity metrics grouped by node role`,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		viper.BindPFlags(cmd.Flags())
+		if err := output.ValidateOutput(*cmd); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		clientset, err := kube.CreateClientSet(KubernetesConfigFlags)
@@ -148,9 +158,11 @@ var nodeRoleCmd = &cobra.Command{
 
 		displayReadable, _ := cmd.Flags().GetBool("readable")
 
+		displayFormat, _ := cmd.Flags().GetString("output")
+
 		sort.Strings(sortedRoleNames)
 
-		output.DisplayNodeRoleData(nodeRoleCapacityData, sortedRoleNames, displayReadable)
+		output.DisplayNodeRoleData(nodeRoleCapacityData, sortedRoleNames, displayReadable, displayFormat)
 
 		return nil
 	},

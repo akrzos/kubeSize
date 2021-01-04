@@ -16,6 +16,9 @@ limitations under the License.
 package capacity
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/akrzos/kubeSize/internal/kube"
 	"github.com/akrzos/kubeSize/internal/output"
 	"github.com/pkg/errors"
@@ -34,6 +37,10 @@ var clusterCmd = &cobra.Command{
 	SilenceUsage:  true,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlags(cmd.Flags())
+		if err := output.ValidateOutput(*cmd); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 
@@ -89,7 +96,9 @@ var clusterCmd = &cobra.Command{
 
 		displayReadable, _ := cmd.Flags().GetBool("readable")
 
-		output.DisplayClusterData(*clusterCapacityData, displayReadable)
+		displayFormat, _ := cmd.Flags().GetString("output")
+
+		output.DisplayClusterData(*clusterCapacityData, displayReadable, displayFormat)
 
 		return nil
 	},
