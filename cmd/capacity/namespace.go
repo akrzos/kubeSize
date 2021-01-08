@@ -65,46 +65,40 @@ var namespaceCmd = &cobra.Command{
 			return errors.Wrap(err, "failed to list namespaces")
 		}
 
+		pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
+
 		namespaceCapacityData := make(map[string]*output.NamespaceCapacityData)
-		sortedNamespaceNames := make([]string, 0, len(namespaces.Items))
+		namespaceNames := make([]string, 0, len(namespaces.Items))
 
-		for _, v := range namespaces.Items {
-			sortedNamespaceNames = append(sortedNamespaceNames, v.Name)
-
-			namespaceFieldSelector, err := fields.ParseSelector("metadata.namespace=" + v.Name)
-			if err != nil {
-				return errors.Wrap(err, "failed to create fieldSelector")
-			}
-			namespacePodsList, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{FieldSelector: namespaceFieldSelector.String()})
-
-			nonTerminatedFieldSelector, err := fields.ParseSelector("metadata.namespace=" + v.Name + ",status.phase!=" + string(corev1.PodSucceeded) + ",status.phase!=" + string(corev1.PodFailed))
-			if err != nil {
-				return errors.Wrap(err, "failed to create fieldSelector")
-			}
-			totalNonTermPodsList, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{FieldSelector: nonTerminatedFieldSelector.String()})
-
-			newNamespaceData := new(output.NamespaceCapacityData)
-			newNamespaceData.TotalPodCount = len(namespacePodsList.Items)
-			newNamespaceData.TotalNonTermPodCount = len(totalNonTermPodsList.Items)
-
-			for _, pod := range totalNonTermPodsList.Items {
-				for _, container := range pod.Spec.Containers {
-					newNamespaceData.TotalRequestsCPU.Add(*container.Resources.Requests.Cpu())
-					newNamespaceData.TotalLimitsCPU.Add(*container.Resources.Limits.Cpu())
-					newNamespaceData.TotalRequestsMemory.Add(*container.Resources.Requests.Memory())
-					newNamespaceData.TotalLimitsMemory.Add(*container.Resources.Limits.Memory())
-				}
-			}
-			namespaceCapacityData[v.Name] = newNamespaceData
+		for _, namespace := range namespaces.Items {
+			namespaceNames = append(namespaceNames, namespace.Name)
+			namespaceCapacityData[namespace.Name] = new(output.NamespaceCapacityData)
 		}
 
-		sort.Strings(sortedNamespaceNames)
+		for _, pod := range pods.Items {
+			if !stringInSlice(pod.Namespace, namespaceNames) {
+				namespaceNames = append(namespaceNames, pod.Namespace)
+				namespaceCapacityData[pod.Namespace] = new(output.NamespaceCapacityData)
+			}
+			namespaceCapacityData[pod.Namespace].TotalPodCount++
+			if (pod.Status.Phase != corev1.PodSucceeded) && (pod.Status.Phase != corev1.PodFailed) {
+				namespaceCapacityData[pod.Namespace].TotalNonTermPodCount++
+				for _, container := range pod.Spec.Containers {
+					namespaceCapacityData[pod.Namespace].TotalRequestsCPU.Add(*container.Resources.Requests.Cpu())
+					namespaceCapacityData[pod.Namespace].TotalLimitsCPU.Add(*container.Resources.Limits.Cpu())
+					namespaceCapacityData[pod.Namespace].TotalRequestsMemory.Add(*container.Resources.Requests.Memory())
+					namespaceCapacityData[pod.Namespace].TotalLimitsMemory.Add(*container.Resources.Limits.Memory())
+				}
+			}
+		}
+
+		sort.Strings(namespaceNames)
 
 		displayReadable, _ := cmd.Flags().GetBool("readable")
 
 		displayFormat, _ := cmd.Flags().GetString("output")
 
-		output.DisplayNamespaceData(namespaceCapacityData, sortedNamespaceNames, displayReadable, displayFormat)
+		output.DisplayNamespaceData(namespaceCapacityData, namespaceNames, displayReadable, displayFormat)
 
 		return nil
 	},
@@ -112,4 +106,13 @@ var namespaceCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(namespaceCmd)
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
