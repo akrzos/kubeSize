@@ -98,7 +98,9 @@ var namespaceCmd = &cobra.Command{
 
 		displayFormat, _ := cmd.Flags().GetString("output")
 
-		output.DisplayNamespaceData(namespaceCapacityData, namespaceNames, displayReadable, displayFormat)
+		displayAllNamespaces, _ := cmd.Flags().GetBool("all-namespaces")
+
+		output.DisplayNamespaceData(namespaceCapacityData, namespaceNames, displayReadable, displayFormat, displayAllNamespaces)
 
 		return nil
 	},
@@ -106,6 +108,7 @@ var namespaceCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(namespaceCmd)
+	namespaceCmd.Flags().BoolP("all-namespaces", "A", false, "Include 0 pod namespaces in table output")
 }
 
 func stringInSlice(a string, list []string) bool {

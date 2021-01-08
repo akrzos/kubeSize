@@ -58,12 +58,12 @@ var nodeRoleCmd = &cobra.Command{
 		}
 
 		nodeRoleCapacityData := make(map[string]*output.ClusterCapacityData)
-		sortedRoleNames := make([]string, 0)
+		roleNames := make([]string, 0)
 
-		for _, v := range nodes.Items {
+		for _, node := range nodes.Items {
 
 			roles := sets.NewString()
-			for labelKey, labelValue := range v.Labels {
+			for labelKey, labelValue := range node.Labels {
 				switch {
 				case strings.HasPrefix(labelKey, "node-role.kubernetes.io/"):
 					if role := strings.TrimPrefix(labelKey, "node-role.kubernetes.io/"); len(role) > 0 {
@@ -77,14 +77,14 @@ var nodeRoleCmd = &cobra.Command{
 				roles.Insert("<none>")
 			}
 
-			nodeFieldSelector, err := fields.ParseSelector("spec.nodeName=" + v.Name)
+			nodeFieldSelector, err := fields.ParseSelector("spec.nodeName=" + node.Name)
 			if err != nil {
 				return errors.Wrap(err, "failed to create fieldSelector")
 			}
 			nodePodsList, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{FieldSelector: nodeFieldSelector.String()})
 			totalPodCount := len(nodePodsList.Items)
 
-			nonTerminatedFieldSelector, err := fields.ParseSelector("spec.nodeName=" + v.Name + ",status.phase!=" + string(corev1.PodSucceeded) + ",status.phase!=" + string(corev1.PodFailed))
+			nonTerminatedFieldSelector, err := fields.ParseSelector("spec.nodeName=" + node.Name + ",status.phase!=" + string(corev1.PodSucceeded) + ",status.phase!=" + string(corev1.PodFailed))
 			if err != nil {
 				return errors.Wrap(err, "failed to create fieldSelector")
 			}
@@ -105,21 +105,21 @@ var nodeRoleCmd = &cobra.Command{
 			for role := range roles {
 				if nodeRoleData, ok := nodeRoleCapacityData[role]; ok {
 					nodeRoleData.TotalNodeCount++
-					for _, condition := range v.Status.Conditions {
+					for _, condition := range node.Status.Conditions {
 						if (condition.Type == "Ready") && condition.Status == corev1.ConditionTrue {
 							nodeRoleData.TotalReadyNodeCount++
 						}
 					}
 					nodeRoleData.TotalUnreadyNodeCount = nodeRoleData.TotalNodeCount - nodeRoleData.TotalReadyNodeCount
-					if v.Spec.Unschedulable {
+					if node.Spec.Unschedulable {
 						nodeRoleData.TotalUnschedulableNodeCount++
 					}
-					nodeRoleData.TotalCapacityPods.Add(*v.Status.Capacity.Pods())
-					nodeRoleData.TotalCapacityCPU.Add(*v.Status.Capacity.Cpu())
-					nodeRoleData.TotalCapacityMemory.Add(*v.Status.Capacity.Memory())
-					nodeRoleData.TotalAllocatablePods.Add(*v.Status.Allocatable.Pods())
-					nodeRoleData.TotalAllocatableCPU.Add(*v.Status.Allocatable.Cpu())
-					nodeRoleData.TotalAllocatableMemory.Add(*v.Status.Allocatable.Memory())
+					nodeRoleData.TotalCapacityPods.Add(*node.Status.Capacity.Pods())
+					nodeRoleData.TotalCapacityCPU.Add(*node.Status.Capacity.Cpu())
+					nodeRoleData.TotalCapacityMemory.Add(*node.Status.Capacity.Memory())
+					nodeRoleData.TotalAllocatablePods.Add(*node.Status.Allocatable.Pods())
+					nodeRoleData.TotalAllocatableCPU.Add(*node.Status.Allocatable.Cpu())
+					nodeRoleData.TotalAllocatableMemory.Add(*node.Status.Allocatable.Memory())
 					nodeRoleData.TotalRequestsCPU.Add(totalRequestsCPU)
 					nodeRoleData.TotalLimitsCPU.Add(totalLimitssCPU)
 					nodeRoleData.TotalRequestsMemory.Add(totalRequestsMemory)
@@ -127,24 +127,24 @@ var nodeRoleCmd = &cobra.Command{
 					nodeRoleData.TotalPodCount += totalPodCount
 					nodeRoleData.TotalNonTermPodCount += nonTerminatedPodCount
 				} else {
-					sortedRoleNames = append(sortedRoleNames, role)
+					roleNames = append(roleNames, role)
 					newNodeRoleCapacityData := new(output.ClusterCapacityData)
 					newNodeRoleCapacityData.TotalNodeCount = 1
-					for _, condition := range v.Status.Conditions {
+					for _, condition := range node.Status.Conditions {
 						if (condition.Type == "Ready") && condition.Status == corev1.ConditionTrue {
 							newNodeRoleCapacityData.TotalReadyNodeCount = 1
 							newNodeRoleCapacityData.TotalUnreadyNodeCount = 0
 						}
 					}
-					if v.Spec.Unschedulable {
+					if node.Spec.Unschedulable {
 						newNodeRoleCapacityData.TotalUnschedulableNodeCount = 1
 					}
-					newNodeRoleCapacityData.TotalCapacityPods.Add(*v.Status.Capacity.Pods())
-					newNodeRoleCapacityData.TotalCapacityCPU.Add(*v.Status.Capacity.Cpu())
-					newNodeRoleCapacityData.TotalCapacityMemory.Add(*v.Status.Capacity.Memory())
-					newNodeRoleCapacityData.TotalAllocatablePods.Add(*v.Status.Allocatable.Pods())
-					newNodeRoleCapacityData.TotalAllocatableCPU.Add(*v.Status.Allocatable.Cpu())
-					newNodeRoleCapacityData.TotalAllocatableMemory.Add(*v.Status.Allocatable.Memory())
+					newNodeRoleCapacityData.TotalCapacityPods.Add(*node.Status.Capacity.Pods())
+					newNodeRoleCapacityData.TotalCapacityCPU.Add(*node.Status.Capacity.Cpu())
+					newNodeRoleCapacityData.TotalCapacityMemory.Add(*node.Status.Capacity.Memory())
+					newNodeRoleCapacityData.TotalAllocatablePods.Add(*node.Status.Allocatable.Pods())
+					newNodeRoleCapacityData.TotalAllocatableCPU.Add(*node.Status.Allocatable.Cpu())
+					newNodeRoleCapacityData.TotalAllocatableMemory.Add(*node.Status.Allocatable.Memory())
 					newNodeRoleCapacityData.TotalRequestsCPU.Add(totalRequestsCPU)
 					newNodeRoleCapacityData.TotalLimitsCPU.Add(totalLimitssCPU)
 					newNodeRoleCapacityData.TotalRequestsMemory.Add(totalRequestsMemory)
@@ -161,9 +161,9 @@ var nodeRoleCmd = &cobra.Command{
 
 		displayFormat, _ := cmd.Flags().GetString("output")
 
-		sort.Strings(sortedRoleNames)
+		sort.Strings(roleNames)
 
-		output.DisplayNodeRoleData(nodeRoleCapacityData, sortedRoleNames, displayReadable, displayFormat)
+		output.DisplayNodeRoleData(nodeRoleCapacityData, roleNames, displayReadable, displayFormat)
 
 		return nil
 	},

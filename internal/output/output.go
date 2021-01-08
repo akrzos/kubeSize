@@ -217,7 +217,7 @@ func DisplayNodeData(nodesCapacityData map[string]*NodeCapacityData, sortedNodeN
 	}
 }
 
-func DisplayNamespaceData(namespaceCapacityData map[string]*NamespaceCapacityData, sortedNamespaceNames []string, displayReadable bool, displayFormat string) {
+func DisplayNamespaceData(namespaceCapacityData map[string]*NamespaceCapacityData, sortedNamespaceNames []string, displayReadable bool, displayFormat string, displayAllNamespaces bool) {
 	if displayFormat == "table" {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 0, 5, 1, ' ', 0)
@@ -228,14 +228,16 @@ func DisplayNamespaceData(namespaceCapacityData map[string]*NamespaceCapacityDat
 		}
 		fmt.Fprintln(w, "\tTotal\tNon-Term\tRequests\tLimits\tRequests\tLimits")
 		for _, k := range sortedNamespaceNames {
-			fmt.Fprintf(w, "%s\t", k)
-			fmt.Fprintf(w, "%d\t%d\t", namespaceCapacityData[k].TotalPodCount, namespaceCapacityData[k].TotalNonTermPodCount)
-			if displayReadable == true {
-				fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(namespaceCapacityData[k].TotalRequestsCPU), readableCPU(namespaceCapacityData[k].TotalLimitsCPU))
-				fmt.Fprintf(w, "%.1f\t%.1f\t\n", readableMem(namespaceCapacityData[k].TotalRequestsMemory), readableMem(namespaceCapacityData[k].TotalLimitsMemory))
-			} else {
-				fmt.Fprintf(w, "%s\t%s\t", &namespaceCapacityData[k].TotalRequestsCPU, &namespaceCapacityData[k].TotalLimitsCPU)
-				fmt.Fprintf(w, "%s\t%s\t\n", &namespaceCapacityData[k].TotalRequestsMemory, &namespaceCapacityData[k].TotalLimitsMemory)
+			if (namespaceCapacityData[k].TotalPodCount != 0) || displayAllNamespaces {
+				fmt.Fprintf(w, "%s\t", k)
+				fmt.Fprintf(w, "%d\t%d\t", namespaceCapacityData[k].TotalPodCount, namespaceCapacityData[k].TotalNonTermPodCount)
+				if displayReadable == true {
+					fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(namespaceCapacityData[k].TotalRequestsCPU), readableCPU(namespaceCapacityData[k].TotalLimitsCPU))
+					fmt.Fprintf(w, "%.1f\t%.1f\t\n", readableMem(namespaceCapacityData[k].TotalRequestsMemory), readableMem(namespaceCapacityData[k].TotalLimitsMemory))
+				} else {
+					fmt.Fprintf(w, "%s\t%s\t", &namespaceCapacityData[k].TotalRequestsCPU, &namespaceCapacityData[k].TotalLimitsCPU)
+					fmt.Fprintf(w, "%s\t%s\t\n", &namespaceCapacityData[k].TotalRequestsMemory, &namespaceCapacityData[k].TotalLimitsMemory)
+				}
 			}
 		}
 		w.Flush()

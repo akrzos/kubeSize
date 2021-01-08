@@ -55,22 +55,22 @@ var clusterCmd = &cobra.Command{
 
 		clusterCapacityData := new(output.ClusterCapacityData)
 
-		for _, v := range nodes.Items {
+		for _, node := range nodes.Items {
 			clusterCapacityData.TotalNodeCount++
-			for _, condition := range v.Status.Conditions {
+			for _, condition := range node.Status.Conditions {
 				if (condition.Type == "Ready") && condition.Status == corev1.ConditionTrue {
 					clusterCapacityData.TotalReadyNodeCount++
 				}
 			}
-			if v.Spec.Unschedulable {
+			if node.Spec.Unschedulable {
 				clusterCapacityData.TotalUnschedulableNodeCount++
 			}
-			clusterCapacityData.TotalCapacityPods.Add(*v.Status.Capacity.Pods())
-			clusterCapacityData.TotalCapacityCPU.Add(*v.Status.Capacity.Cpu())
-			clusterCapacityData.TotalCapacityMemory.Add(*v.Status.Capacity.Memory())
-			clusterCapacityData.TotalAllocatablePods.Add(*v.Status.Allocatable.Pods())
-			clusterCapacityData.TotalAllocatableCPU.Add(*v.Status.Allocatable.Cpu())
-			clusterCapacityData.TotalAllocatableMemory.Add(*v.Status.Allocatable.Memory())
+			clusterCapacityData.TotalCapacityPods.Add(*node.Status.Capacity.Pods())
+			clusterCapacityData.TotalCapacityCPU.Add(*node.Status.Capacity.Cpu())
+			clusterCapacityData.TotalCapacityMemory.Add(*node.Status.Capacity.Memory())
+			clusterCapacityData.TotalAllocatablePods.Add(*node.Status.Allocatable.Pods())
+			clusterCapacityData.TotalAllocatableCPU.Add(*node.Status.Allocatable.Cpu())
+			clusterCapacityData.TotalAllocatableMemory.Add(*node.Status.Allocatable.Memory())
 		}
 		clusterCapacityData.TotalUnreadyNodeCount = clusterCapacityData.TotalNodeCount - clusterCapacityData.TotalReadyNodeCount
 

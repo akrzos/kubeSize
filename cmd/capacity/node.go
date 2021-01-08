@@ -57,13 +57,13 @@ var nodeCmd = &cobra.Command{
 		}
 
 		nodesCapacityData := make(map[string]*output.NodeCapacityData)
-		sortedNodeNames := make([]string, 0, len(nodes.Items))
+		nodeNames := make([]string, 0, len(nodes.Items))
 
-		for _, v := range nodes.Items {
-			sortedNodeNames = append(sortedNodeNames, v.Name)
+		for _, node := range nodes.Items {
+			nodeNames = append(nodeNames, node.Name)
 
 			roles := sets.NewString()
-			for labelKey, labelValue := range v.Labels {
+			for labelKey, labelValue := range node.Labels {
 				switch {
 				case strings.HasPrefix(labelKey, "node-role.kubernetes.io/"):
 					if role := strings.TrimPrefix(labelKey, "node-role.kubernetes.io/"); len(role) > 0 {
@@ -77,13 +77,13 @@ var nodeCmd = &cobra.Command{
 				roles.Insert("<none>")
 			}
 
-			nodeFieldSelector, err := fields.ParseSelector("spec.nodeName=" + v.Name)
+			nodeFieldSelector, err := fields.ParseSelector("spec.nodeName=" + node.Name)
 			if err != nil {
 				return errors.Wrap(err, "failed to create fieldSelector")
 			}
 			nodePodsList, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{FieldSelector: nodeFieldSelector.String()})
 
-			nonTerminatedFieldSelector, err := fields.ParseSelector("spec.nodeName=" + v.Name + ",status.phase!=" + string(corev1.PodSucceeded) + ",status.phase!=" + string(corev1.PodFailed))
+			nonTerminatedFieldSelector, err := fields.ParseSelector("spec.nodeName=" + node.Name + ",status.phase!=" + string(corev1.PodSucceeded) + ",status.phase!=" + string(corev1.PodFailed))
 			if err != nil {
 				return errors.Wrap(err, "failed to create fieldSelector")
 			}
@@ -93,20 +93,20 @@ var nodeCmd = &cobra.Command{
 			newNodeData.TotalPodCount = len(nodePodsList.Items)
 			newNodeData.TotalNonTermPodCount = len(totalNonTermPodsList.Items)
 			newNodeData.Ready = false
-			for _, condition := range v.Status.Conditions {
+			for _, condition := range node.Status.Conditions {
 				if (condition.Type == "Ready") && condition.Status == corev1.ConditionTrue {
 					newNodeData.Ready = true
 					break
 				}
 			}
-			newNodeData.Schedulable = !v.Spec.Unschedulable
+			newNodeData.Schedulable = !node.Spec.Unschedulable
 			newNodeData.Roles = roles
-			newNodeData.TotalCapacityPods.Add(*v.Status.Capacity.Pods())
-			newNodeData.TotalCapacityCPU.Add(*v.Status.Capacity.Cpu())
-			newNodeData.TotalCapacityMemory.Add(*v.Status.Capacity.Memory())
-			newNodeData.TotalAllocatablePods.Add(*v.Status.Allocatable.Pods())
-			newNodeData.TotalAllocatableCPU.Add(*v.Status.Allocatable.Cpu())
-			newNodeData.TotalAllocatableMemory.Add(*v.Status.Capacity.Memory())
+			newNodeData.TotalCapacityPods.Add(*node.Status.Capacity.Pods())
+			newNodeData.TotalCapacityCPU.Add(*node.Status.Capacity.Cpu())
+			newNodeData.TotalCapacityMemory.Add(*node.Status.Capacity.Memory())
+			newNodeData.TotalAllocatablePods.Add(*node.Status.Allocatable.Pods())
+			newNodeData.TotalAllocatableCPU.Add(*node.Status.Allocatable.Cpu())
+			newNodeData.TotalAllocatableMemory.Add(*node.Status.Capacity.Memory())
 
 			for _, pod := range totalNonTermPodsList.Items {
 				for _, container := range pod.Spec.Containers {
@@ -116,7 +116,7 @@ var nodeCmd = &cobra.Command{
 					newNodeData.TotalLimitsMemory.Add(*container.Resources.Limits.Memory())
 				}
 			}
-			nodesCapacityData[v.Name] = newNodeData
+			nodesCapacityData[node.Name] = newNodeData
 
 		}
 
@@ -124,9 +124,9 @@ var nodeCmd = &cobra.Command{
 
 		displayFormat, _ := cmd.Flags().GetString("output")
 
-		sort.Strings(sortedNodeNames)
+		sort.Strings(nodeNames)
 
-		output.DisplayNodeData(nodesCapacityData, sortedNodeNames, displayReadable, displayFormat)
+		output.DisplayNodeData(nodesCapacityData, nodeNames, displayReadable, displayFormat)
 
 		return nil
 	},
