@@ -28,7 +28,6 @@ import (
 	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
@@ -56,11 +55,14 @@ var nodeCmd = &cobra.Command{
 			return errors.Wrap(err, "failed to list nodes")
 		}
 
+		pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
+
 		nodesCapacityData := make(map[string]*output.NodeCapacityData)
 		nodeNames := make([]string, 0, len(nodes.Items))
 
 		for _, node := range nodes.Items {
 			nodeNames = append(nodeNames, node.Name)
+			nodesCapacityData[node.Name] = new(output.NodeCapacityData)
 
 			roles := sets.NewString()
 			for labelKey, labelValue := range node.Labels {
@@ -77,46 +79,41 @@ var nodeCmd = &cobra.Command{
 				roles.Insert("<none>")
 			}
 
-			nodeFieldSelector, err := fields.ParseSelector("spec.nodeName=" + node.Name)
-			if err != nil {
-				return errors.Wrap(err, "failed to create fieldSelector")
-			}
-			nodePodsList, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{FieldSelector: nodeFieldSelector.String()})
-
-			nonTerminatedFieldSelector, err := fields.ParseSelector("spec.nodeName=" + node.Name + ",status.phase!=" + string(corev1.PodSucceeded) + ",status.phase!=" + string(corev1.PodFailed))
-			if err != nil {
-				return errors.Wrap(err, "failed to create fieldSelector")
-			}
-			totalNonTermPodsList, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{FieldSelector: nonTerminatedFieldSelector.String()})
-
-			newNodeData := new(output.NodeCapacityData)
-			newNodeData.TotalPodCount = len(nodePodsList.Items)
-			newNodeData.TotalNonTermPodCount = len(totalNonTermPodsList.Items)
-			newNodeData.Ready = false
+			nodesCapacityData[node.Name].Ready = false
 			for _, condition := range node.Status.Conditions {
 				if (condition.Type == "Ready") && condition.Status == corev1.ConditionTrue {
-					newNodeData.Ready = true
+					nodesCapacityData[node.Name].Ready = true
 					break
 				}
 			}
-			newNodeData.Schedulable = !node.Spec.Unschedulable
-			newNodeData.Roles = roles
-			newNodeData.TotalCapacityPods.Add(*node.Status.Capacity.Pods())
-			newNodeData.TotalCapacityCPU.Add(*node.Status.Capacity.Cpu())
-			newNodeData.TotalCapacityMemory.Add(*node.Status.Capacity.Memory())
-			newNodeData.TotalAllocatablePods.Add(*node.Status.Allocatable.Pods())
-			newNodeData.TotalAllocatableCPU.Add(*node.Status.Allocatable.Cpu())
-			newNodeData.TotalAllocatableMemory.Add(*node.Status.Capacity.Memory())
 
-			for _, pod := range totalNonTermPodsList.Items {
+			nodesCapacityData[node.Name].Schedulable = !node.Spec.Unschedulable
+			nodesCapacityData[node.Name].Roles = roles
+			nodesCapacityData[node.Name].TotalCapacityPods.Add(*node.Status.Capacity.Pods())
+			nodesCapacityData[node.Name].TotalCapacityCPU.Add(*node.Status.Capacity.Cpu())
+			nodesCapacityData[node.Name].TotalCapacityMemory.Add(*node.Status.Capacity.Memory())
+			nodesCapacityData[node.Name].TotalAllocatablePods.Add(*node.Status.Allocatable.Pods())
+			nodesCapacityData[node.Name].TotalAllocatableCPU.Add(*node.Status.Allocatable.Cpu())
+			nodesCapacityData[node.Name].TotalAllocatableMemory.Add(*node.Status.Capacity.Memory())
+		}
+		nodesCapacityData["unassigned"] = new(output.NodeCapacityData)
+
+		for _, pod := range pods.Items {
+			podNode := pod.Spec.NodeName
+			if pod.Spec.NodeName == "" {
+				podNode = "unassigned"
+			}
+			nodesCapacityData[podNode].TotalPodCount++
+
+			if (pod.Status.Phase != corev1.PodSucceeded) && (pod.Status.Phase != corev1.PodFailed) {
+				nodesCapacityData[podNode].TotalNonTermPodCount++
 				for _, container := range pod.Spec.Containers {
-					newNodeData.TotalRequestsCPU.Add(*container.Resources.Requests.Cpu())
-					newNodeData.TotalLimitsCPU.Add(*container.Resources.Limits.Cpu())
-					newNodeData.TotalRequestsMemory.Add(*container.Resources.Requests.Memory())
-					newNodeData.TotalLimitsMemory.Add(*container.Resources.Limits.Memory())
+					nodesCapacityData[podNode].TotalRequestsCPU.Add(*container.Resources.Requests.Cpu())
+					nodesCapacityData[podNode].TotalLimitsCPU.Add(*container.Resources.Limits.Cpu())
+					nodesCapacityData[podNode].TotalRequestsMemory.Add(*container.Resources.Requests.Memory())
+					nodesCapacityData[podNode].TotalLimitsMemory.Add(*container.Resources.Limits.Memory())
 				}
 			}
-			nodesCapacityData[node.Name] = newNodeData
 
 		}
 
@@ -125,6 +122,7 @@ var nodeCmd = &cobra.Command{
 		displayFormat, _ := cmd.Flags().GetString("output")
 
 		sort.Strings(nodeNames)
+		nodeNames = append(nodeNames, "unassigned")
 
 		output.DisplayNodeData(nodesCapacityData, nodeNames, displayReadable, displayFormat)
 

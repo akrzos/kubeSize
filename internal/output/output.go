@@ -175,13 +175,15 @@ func DisplayNodeData(nodesCapacityData map[string]*NodeCapacityData, sortedNodeN
 
 		for _, k := range sortedNodeNames {
 			fmt.Fprintf(w, "%s\t", k)
-			if nodesCapacityData[k].Ready {
-				fmt.Fprint(w, "Ready")
-			} else {
-				fmt.Fprint(w, "NotReady")
-			}
-			if !nodesCapacityData[k].Schedulable {
-				fmt.Fprintf(w, ",Unschedulable")
+			if k != "unassigned" {
+				if nodesCapacityData[k].Ready {
+					fmt.Fprint(w, "Ready")
+				} else {
+					fmt.Fprint(w, "NotReady")
+				}
+				if !nodesCapacityData[k].Schedulable {
+					fmt.Fprintf(w, ",Unschedulable")
+				}
 			}
 			fmt.Fprintf(w, "\t")
 			fmt.Fprintf(w, "%s\t", strings.Join(nodesCapacityData[k].Roles.List(), ","))

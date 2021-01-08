@@ -77,6 +77,7 @@ var clusterCmd = &cobra.Command{
 		totalPodsList, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
 		clusterCapacityData.TotalPodCount = len(totalPodsList.Items)
 
+		// Note you can have non-terminated pod not assigned to a node (Ex Pending) thus cluster vs node/node-role counts can differ
 		fieldSelector, err := fields.ParseSelector("status.phase!=" + string(corev1.PodSucceeded) + ",status.phase!=" + string(corev1.PodFailed))
 		if err != nil {
 			return errors.Wrap(err, "failed to create fieldSelector")
