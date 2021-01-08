@@ -30,11 +30,10 @@ import (
 )
 
 var clusterCmd = &cobra.Command{
-	Use:           "cluster",
-	Short:         "Get cluster size and capacity",
-	Long:          `Get Kubernetes cluster size and capacity metrics`,
-	SilenceErrors: true,
-	SilenceUsage:  true,
+	Use:     "cluster",
+	Aliases: []string{"c"},
+	Short:   "Get cluster size and capacity",
+	Long:    `Get Kubernetes cluster size and capacity metrics`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlags(cmd.Flags())
 		if err := output.ValidateOutput(*cmd); err != nil {

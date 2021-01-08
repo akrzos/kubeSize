@@ -31,9 +31,10 @@ import (
 )
 
 var namespaceCmd = &cobra.Command{
-	Use:   "namespace",
-	Short: "Get namespace size",
-	Long:  `Get namespace size and capacity metrics`,
+	Use:     "namespace",
+	Aliases: []string{"na"},
+	Short:   "Get namespace size",
+	Long:    `Get namespace size and capacity metrics`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlags(cmd.Flags())
 		if err := output.ValidateOutput(*cmd); err != nil {

@@ -34,9 +34,10 @@ import (
 )
 
 var nodeRoleCmd = &cobra.Command{
-	Use:   "node-role",
-	Short: "Get cluster capacity grouped by node role",
-	Long:  `Get Kubernetes cluster size and capacity metrics grouped by node role`,
+	Use:     "node-role",
+	Aliases: []string{"nr"},
+	Short:   "Get cluster capacity grouped by node role",
+	Long:    `Get Kubernetes cluster size and capacity metrics grouped by node role`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlags(cmd.Flags())
 		if err := output.ValidateOutput(*cmd); err != nil {

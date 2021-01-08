@@ -51,6 +51,8 @@ type NodeCapacityData struct {
 	TotalPodCount          int
 	TotalNonTermPodCount   int
 	Roles                  sets.String
+	Ready                  bool
+	Schedulable            bool
 	TotalCapacityPods      resource.Quantity
 	TotalCapacityCPU       resource.Quantity
 	TotalCapacityMemory    resource.Quantity
@@ -165,14 +167,23 @@ func DisplayNodeData(nodesCapacityData map[string]*NodeCapacityData, sortedNodeN
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 0, 5, 1, ' ', 0)
 		if displayReadable == true {
-			fmt.Fprintln(w, "NAME\tROLES\tPODS\t\t\t\tCPU (cores)\t\t\t\tMEMORY (GiB)\t\t")
+			fmt.Fprintln(w, "NAME\tSTATUS\tROLES\tPODS\t\t\t\tCPU (cores)\t\t\t\tMEMORY (GiB)\t\t")
 		} else {
-			fmt.Fprintln(w, "NAME\tROLES\tPODS\t\t\t\tCPU\t\t\t\tMEMORY\t\t")
+			fmt.Fprintln(w, "NAME\tSTATUS\tROLES\tPODS\t\t\t\tCPU\t\t\t\tMEMORY\t\t")
 		}
-		fmt.Fprintln(w, "\t\tCapacity\tAllocatable\tTotal\tNon-Term\tCapacity\tAllocatable\tRequests\tLimits\tCapacity\tAllocatable\tRequests\tLimits")
+		fmt.Fprintln(w, "\t\t\tCapacity\tAllocatable\tTotal\tNon-Term\tCapacity\tAllocatable\tRequests\tLimits\tCapacity\tAllocatable\tRequests\tLimits")
 
 		for _, k := range sortedNodeNames {
 			fmt.Fprintf(w, "%s\t", k)
+			if nodesCapacityData[k].Ready {
+				fmt.Fprint(w, "Ready")
+			} else {
+				fmt.Fprint(w, "NotReady")
+			}
+			if !nodesCapacityData[k].Schedulable {
+				fmt.Fprintf(w, ",Unschedulable")
+			}
+			fmt.Fprintf(w, "\t")
 			fmt.Fprintf(w, "%s\t", strings.Join(nodesCapacityData[k].Roles.List(), ","))
 			fmt.Fprintf(w, "%s\t%s\t", &nodesCapacityData[k].TotalCapacityPods, &nodesCapacityData[k].TotalCapacityPods)
 			fmt.Fprintf(w, "%d\t%d\t", nodesCapacityData[k].TotalPodCount, nodesCapacityData[k].TotalNonTermPodCount)

@@ -33,11 +33,10 @@ import (
 )
 
 var nodeCmd = &cobra.Command{
-	Use:           "node",
-	Short:         "Get individual node capacity",
-	Long:          `Get individual node size and capacity metrics grouped by node role`,
-	SilenceErrors: true,
-	SilenceUsage:  true,
+	Use:     "node",
+	Aliases: []string{"no"},
+	Short:   "Get individual node capacity",
+	Long:    `Get individual node size and capacity metrics grouped by node role`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlags(cmd.Flags())
 		if err := output.ValidateOutput(*cmd); err != nil {
@@ -93,6 +92,14 @@ var nodeCmd = &cobra.Command{
 			newNodeData := new(output.NodeCapacityData)
 			newNodeData.TotalPodCount = len(nodePodsList.Items)
 			newNodeData.TotalNonTermPodCount = len(totalNonTermPodsList.Items)
+			newNodeData.Ready = false
+			for _, condition := range v.Status.Conditions {
+				if (condition.Type == "Ready") && condition.Status == corev1.ConditionTrue {
+					newNodeData.Ready = true
+					break
+				}
+			}
+			newNodeData.Schedulable = !v.Spec.Unschedulable
 			newNodeData.Roles = roles
 			newNodeData.TotalCapacityPods.Add(*v.Status.Capacity.Pods())
 			newNodeData.TotalCapacityCPU.Add(*v.Status.Capacity.Cpu())
