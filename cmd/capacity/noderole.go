@@ -52,6 +52,12 @@ var nodeRoleCmd = &cobra.Command{
 			return errors.Wrap(err, "failed to create clientset")
 		}
 
+		// Fix perf idea:
+		// Get nodes, get pods
+		// Create map of cluster capacity data mapped to each noderole
+		// Create list of node roles, create map of node to node role list
+		// iterate through each pod checking the node, appending data for each role in list
+
 		nodes, err := clientset.CoreV1().Nodes().List(metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list nodes")
@@ -157,13 +163,23 @@ var nodeRoleCmd = &cobra.Command{
 
 		}
 
-		displayReadable, _ := cmd.Flags().GetBool("readable")
+		for _, role := range roleNames {
+			nodeRoleCapacityData[role].TotalAvailablePods = int(nodeRoleCapacityData[role].TotalAllocatablePods.Value()) - nodeRoleCapacityData[role].TotalNonTermPodCount
+			nodeRoleCapacityData[role].TotalAvailableCPU = nodeRoleCapacityData[role].TotalAllocatableCPU
+			nodeRoleCapacityData[role].TotalAvailableCPU.Sub(nodeRoleCapacityData[role].TotalRequestsCPU)
+			nodeRoleCapacityData[role].TotalAvailableMemory = nodeRoleCapacityData[role].TotalAllocatableMemory
+			nodeRoleCapacityData[role].TotalAvailableMemory.Sub(nodeRoleCapacityData[role].TotalRequestsMemory)
+		}
+
+		displayDefault, _ := cmd.Flags().GetBool("default-format")
+
+		displayNoHeaders, _ := cmd.Flags().GetBool("no-headers")
 
 		displayFormat, _ := cmd.Flags().GetString("output")
 
 		sort.Strings(roleNames)
 
-		output.DisplayNodeRoleData(nodeRoleCapacityData, roleNames, displayReadable, displayFormat)
+		output.DisplayNodeRoleData(nodeRoleCapacityData, roleNames, displayDefault, displayNoHeaders, displayFormat)
 
 		return nil
 	},

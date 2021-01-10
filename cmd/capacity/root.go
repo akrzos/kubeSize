@@ -53,6 +53,7 @@ func initConfig() {
 func init() {
 	KubernetesConfigFlags = genericclioptions.NewConfigFlags(false)
 	KubernetesConfigFlags.AddFlags(rootCmd.PersistentFlags())
-	rootCmd.PersistentFlags().BoolP("readable", "r", false, "Human readable resources (CPU in Cores, Memory in GiB)")
+	rootCmd.PersistentFlags().BoolP("default-format", "d", false, "Use default format of displaying resource quantities")
+	rootCmd.PersistentFlags().BoolP("no-headers", "", false, "No headers in table output format")
 	rootCmd.PersistentFlags().StringP("output", "o", "table", "Output format. One of: table|json|yaml")
 }

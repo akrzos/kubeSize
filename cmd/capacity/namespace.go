@@ -80,6 +80,9 @@ var namespaceCmd = &cobra.Command{
 				namespaceNames = append(namespaceNames, pod.Namespace)
 				namespaceCapacityData[pod.Namespace] = new(output.NamespaceCapacityData)
 			}
+			if pod.Spec.NodeName == "" {
+				namespaceCapacityData[pod.Namespace].TotalUnassignedNodePodCount++
+			}
 			namespaceCapacityData[pod.Namespace].TotalPodCount++
 			if (pod.Status.Phase != corev1.PodSucceeded) && (pod.Status.Phase != corev1.PodFailed) {
 				namespaceCapacityData[pod.Namespace].TotalNonTermPodCount++
@@ -94,13 +97,15 @@ var namespaceCmd = &cobra.Command{
 
 		sort.Strings(namespaceNames)
 
-		displayReadable, _ := cmd.Flags().GetBool("readable")
+		displayDefault, _ := cmd.Flags().GetBool("default-format")
+
+		displayNoHeaders, _ := cmd.Flags().GetBool("no-headers")
 
 		displayFormat, _ := cmd.Flags().GetString("output")
 
 		displayAllNamespaces, _ := cmd.Flags().GetBool("all-namespaces")
 
-		output.DisplayNamespaceData(namespaceCapacityData, namespaceNames, displayReadable, displayFormat, displayAllNamespaces)
+		output.DisplayNamespaceData(namespaceCapacityData, namespaceNames, displayDefault, displayNoHeaders, displayFormat, displayAllNamespaces)
 
 		return nil
 	},

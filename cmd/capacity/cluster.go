@@ -94,11 +94,19 @@ var clusterCmd = &cobra.Command{
 			}
 		}
 
-		displayReadable, _ := cmd.Flags().GetBool("readable")
+		clusterCapacityData.TotalAvailablePods = int(clusterCapacityData.TotalAllocatablePods.Value()) - clusterCapacityData.TotalNonTermPodCount
+		clusterCapacityData.TotalAvailableCPU = clusterCapacityData.TotalAllocatableCPU
+		clusterCapacityData.TotalAvailableCPU.Sub(clusterCapacityData.TotalRequestsCPU)
+		clusterCapacityData.TotalAvailableMemory = clusterCapacityData.TotalAllocatableMemory
+		clusterCapacityData.TotalAvailableMemory.Sub(clusterCapacityData.TotalRequestsMemory)
+
+		displayDefault, _ := cmd.Flags().GetBool("default-format")
+
+		displayNoHeaders, _ := cmd.Flags().GetBool("no-headers")
 
 		displayFormat, _ := cmd.Flags().GetString("output")
 
-		output.DisplayClusterData(*clusterCapacityData, displayReadable, displayFormat)
+		output.DisplayClusterData(*clusterCapacityData, displayDefault, displayNoHeaders, displayFormat)
 
 		return nil
 	},

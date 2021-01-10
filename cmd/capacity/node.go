@@ -117,14 +117,24 @@ var nodeCmd = &cobra.Command{
 
 		}
 
-		displayReadable, _ := cmd.Flags().GetBool("readable")
+		for _, node := range nodeNames {
+			nodesCapacityData[node].TotalAvailablePods = int(nodesCapacityData[node].TotalAllocatablePods.Value()) - nodesCapacityData[node].TotalNonTermPodCount
+			nodesCapacityData[node].TotalAvailableCPU = nodesCapacityData[node].TotalAllocatableCPU
+			nodesCapacityData[node].TotalAvailableCPU.Sub(nodesCapacityData[node].TotalRequestsCPU)
+			nodesCapacityData[node].TotalAvailableMemory = nodesCapacityData[node].TotalAllocatableMemory
+			nodesCapacityData[node].TotalAvailableMemory.Sub(nodesCapacityData[node].TotalRequestsMemory)
+		}
+
+		displayDefault, _ := cmd.Flags().GetBool("default-format")
+
+		displayNoHeaders, _ := cmd.Flags().GetBool("no-headers")
 
 		displayFormat, _ := cmd.Flags().GetString("output")
 
 		sort.Strings(nodeNames)
 		nodeNames = append(nodeNames, "unassigned")
 
-		output.DisplayNodeData(nodesCapacityData, nodeNames, displayReadable, displayFormat)
+		output.DisplayNodeData(nodesCapacityData, nodeNames, displayDefault, displayNoHeaders, displayFormat)
 
 		return nil
 	},

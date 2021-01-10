@@ -28,6 +28,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// Available = allocatable - (scheduled aka non-term pod or requests.cpu/memory)
 type ClusterCapacityData struct {
 	TotalNodeCount              int
 	TotalReadyNodeCount         int
@@ -41,10 +42,13 @@ type ClusterCapacityData struct {
 	TotalAllocatablePods        resource.Quantity
 	TotalAllocatableCPU         resource.Quantity
 	TotalAllocatableMemory      resource.Quantity
+	TotalAvailablePods          int
 	TotalRequestsCPU            resource.Quantity
 	TotalLimitsCPU              resource.Quantity
+	TotalAvailableCPU           resource.Quantity
 	TotalRequestsMemory         resource.Quantity
 	TotalLimitsMemory           resource.Quantity
+	TotalAvailableMemory        resource.Quantity
 }
 
 type NodeCapacityData struct {
@@ -59,44 +63,55 @@ type NodeCapacityData struct {
 	TotalAllocatablePods   resource.Quantity
 	TotalAllocatableCPU    resource.Quantity
 	TotalAllocatableMemory resource.Quantity
+	TotalAvailablePods     int
 	TotalRequestsCPU       resource.Quantity
 	TotalLimitsCPU         resource.Quantity
+	TotalAvailableCPU      resource.Quantity
 	TotalRequestsMemory    resource.Quantity
 	TotalLimitsMemory      resource.Quantity
+	TotalAvailableMemory   resource.Quantity
 }
 
 type NamespaceCapacityData struct {
-	TotalPodCount        int
-	TotalNonTermPodCount int
-	TotalRequestsCPU     resource.Quantity
-	TotalLimitsCPU       resource.Quantity
-	TotalRequestsMemory  resource.Quantity
-	TotalLimitsMemory    resource.Quantity
+	TotalPodCount               int
+	TotalNonTermPodCount        int
+	TotalUnassignedNodePodCount int
+	TotalRequestsCPU            resource.Quantity
+	TotalLimitsCPU              resource.Quantity
+	TotalRequestsMemory         resource.Quantity
+	TotalLimitsMemory           resource.Quantity
 }
 
-func DisplayClusterData(clusterCapacityData ClusterCapacityData, displayReadable bool, displayFormat string) {
+func DisplayClusterData(clusterCapacityData ClusterCapacityData, displayDefault bool, displayNoHeaders bool, displayFormat string) {
 	if displayFormat == "table" {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 0, 5, 1, ' ', 0)
-		if displayReadable == true {
-			fmt.Fprintln(w, "NODES\t\t\t\tPODS\t\t\t\tCPU (cores)\t\t\t\tMEMORY (GiB)\t\t")
-		} else {
-			fmt.Fprintln(w, "NODES\t\t\t\tPODS\t\t\t\tCPU\t\t\t\tMEMORY\t\t")
+		if displayNoHeaders == false {
+			if displayDefault {
+				fmt.Fprintln(w, "NODES\t\t\t\tPODS\t\t\t\t\tCPU\t\t\t\t\tMEMORY\t\t\t")
+			} else {
+				fmt.Fprintln(w, "NODES\t\t\t\tPODS\t\t\t\t\tCPU (cores)\t\t\t\t\tMEMORY (GiB)\t\t\t")
+			}
+			fmt.Fprintln(w, "Total\tReady\tUnready\tUnschedulable\tCapacity\tAllocatable\tTotal\tNon-Term\tAvailable\tCapacity\tAllocatable\tRequests\tLimits\tAvailable\tCapacity\tAllocatable\tRequests\tLimits\tAvailable")
 		}
-		fmt.Fprintln(w, "Total\tReady\tUnready\tUnschedulable\tCapacity\tAllocatable\tTotal\tNon-Term\tCapacity\tAllocatable\tRequests\tLimits\tCapacity\tAllocatable\tRequests\tLimits")
 		fmt.Fprintf(w, "%d\t%d\t%d\t%d\t", clusterCapacityData.TotalNodeCount, clusterCapacityData.TotalReadyNodeCount, clusterCapacityData.TotalUnreadyNodeCount, clusterCapacityData.TotalUnschedulableNodeCount)
 		fmt.Fprintf(w, "%s\t%s\t", &clusterCapacityData.TotalCapacityPods, &clusterCapacityData.TotalAllocatablePods)
 		fmt.Fprintf(w, "%d\t%d\t", clusterCapacityData.TotalPodCount, clusterCapacityData.TotalNonTermPodCount)
-		if displayReadable == true {
-			fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(clusterCapacityData.TotalCapacityCPU), readableCPU(clusterCapacityData.TotalAllocatableCPU))
-			fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(clusterCapacityData.TotalRequestsCPU), readableCPU(clusterCapacityData.TotalLimitsCPU))
-			fmt.Fprintf(w, "%.1f\t%.1f\t", readableMem(clusterCapacityData.TotalCapacityMemory), readableMem(clusterCapacityData.TotalAllocatableMemory))
-			fmt.Fprintf(w, "%.1f\t%.1f\t\n", readableMem(clusterCapacityData.TotalRequestsMemory), readableMem(clusterCapacityData.TotalLimitsMemory))
-		} else {
+		fmt.Fprintf(w, "%d\t", clusterCapacityData.TotalAvailablePods)
+		if displayDefault {
 			fmt.Fprintf(w, "%s\t%s\t", &clusterCapacityData.TotalCapacityCPU, &clusterCapacityData.TotalAllocatableCPU)
 			fmt.Fprintf(w, "%s\t%s\t", &clusterCapacityData.TotalRequestsCPU, &clusterCapacityData.TotalLimitsCPU)
+			fmt.Fprintf(w, "%s\t", &clusterCapacityData.TotalAvailableCPU)
 			fmt.Fprintf(w, "%s\t%s\t", &clusterCapacityData.TotalCapacityMemory, &clusterCapacityData.TotalAllocatableMemory)
-			fmt.Fprintf(w, "%s\t%s\t\n", &clusterCapacityData.TotalRequestsMemory, &clusterCapacityData.TotalLimitsMemory)
+			fmt.Fprintf(w, "%s\t%s\t", &clusterCapacityData.TotalRequestsMemory, &clusterCapacityData.TotalLimitsMemory)
+			fmt.Fprintf(w, "%s\t\n", &clusterCapacityData.TotalAvailableMemory)
+		} else {
+			fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(clusterCapacityData.TotalCapacityCPU), readableCPU(clusterCapacityData.TotalAllocatableCPU))
+			fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(clusterCapacityData.TotalRequestsCPU), readableCPU(clusterCapacityData.TotalLimitsCPU))
+			fmt.Fprintf(w, "%.1f\t", readableCPU(clusterCapacityData.TotalAvailableCPU))
+			fmt.Fprintf(w, "%.1f\t%.1f\t", readableMem(clusterCapacityData.TotalCapacityMemory), readableMem(clusterCapacityData.TotalAllocatableMemory))
+			fmt.Fprintf(w, "%.1f\t%.1f\t", readableMem(clusterCapacityData.TotalRequestsMemory), readableMem(clusterCapacityData.TotalLimitsMemory))
+			fmt.Fprintf(w, "%.1f\t\n", readableMem(clusterCapacityData.TotalAvailableMemory))
 		}
 		w.Flush()
 	} else if displayFormat == "json" {
@@ -116,32 +131,38 @@ func DisplayClusterData(clusterCapacityData ClusterCapacityData, displayReadable
 	}
 }
 
-func DisplayNodeRoleData(nodeRoleCapacityData map[string]*ClusterCapacityData, sortedRoleNames []string, displayReadable bool, displayFormat string) {
+func DisplayNodeRoleData(nodeRoleCapacityData map[string]*ClusterCapacityData, sortedRoleNames []string, displayDefault bool, displayNoHeaders bool, displayFormat string) {
 	if displayFormat == "table" {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 0, 5, 1, ' ', 0)
-		if displayReadable == true {
-			fmt.Fprintln(w, "ROLE\tNODES\t\t\t\tPODS\t\t\t\tCPU (cores)\t\t\t\tMEMORY (GiB)\t\t")
-		} else {
-			fmt.Fprintln(w, "ROLE\tNODES\t\t\t\tPODS\t\t\t\tCPU\t\t\t\tMEMORY\t\t")
+		if displayNoHeaders == false {
+			if displayDefault {
+				fmt.Fprintln(w, "ROLE\tNODES\t\t\t\tPODS\t\t\t\t\tCPU\t\t\t\t\tMEMORY\t\t\t")
+			} else {
+				fmt.Fprintln(w, "ROLE\tNODES\t\t\t\tPODS\t\t\t\t\tCPU (cores)\t\t\t\t\tMEMORY (GiB)\t\t\t")
+			}
+			fmt.Fprintln(w, "\tTotal\tReady\tUnready\tUnschedulable\tCapacity\tAllocatable\tTotal\tNon-Term\tAvailable\tCapacity\tAllocatable\tRequests\tLimits\tAvailable\tCapacity\tAllocatable\tRequests\tLimits\tAvailable")
 		}
-		fmt.Fprintln(w, "\tTotal\tReady\tUnready\tUnschedulable\tCapacity\tAllocatable\tTotal\tNon-Term\tCapacity\tAllocatable\tRequests\tLimits\tCapacity\tAllocatable\tRequests\tLimits")
-
 		for _, k := range sortedRoleNames {
 			fmt.Fprintf(w, "%s\t", k)
 			fmt.Fprintf(w, "%d\t%d\t%d\t%d\t", nodeRoleCapacityData[k].TotalNodeCount, nodeRoleCapacityData[k].TotalReadyNodeCount, nodeRoleCapacityData[k].TotalUnreadyNodeCount, nodeRoleCapacityData[k].TotalUnschedulableNodeCount)
 			fmt.Fprintf(w, "%s\t%s\t", &nodeRoleCapacityData[k].TotalCapacityPods, &nodeRoleCapacityData[k].TotalAllocatablePods)
 			fmt.Fprintf(w, "%d\t%d\t", nodeRoleCapacityData[k].TotalPodCount, nodeRoleCapacityData[k].TotalNonTermPodCount)
-			if displayReadable == true {
-				fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(nodeRoleCapacityData[k].TotalCapacityCPU), readableCPU(nodeRoleCapacityData[k].TotalAllocatableCPU))
-				fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(nodeRoleCapacityData[k].TotalRequestsCPU), readableCPU(nodeRoleCapacityData[k].TotalLimitsCPU))
-				fmt.Fprintf(w, "%.1f\t%.1f\t", readableMem(nodeRoleCapacityData[k].TotalCapacityMemory), readableMem(nodeRoleCapacityData[k].TotalAllocatableMemory))
-				fmt.Fprintf(w, "%.1f\t%.1f\t\n", readableMem(nodeRoleCapacityData[k].TotalRequestsMemory), readableMem(nodeRoleCapacityData[k].TotalLimitsMemory))
-			} else {
+			fmt.Fprintf(w, "%d\t", nodeRoleCapacityData[k].TotalAvailablePods)
+			if displayDefault {
 				fmt.Fprintf(w, "%s\t%s\t", &nodeRoleCapacityData[k].TotalCapacityCPU, &nodeRoleCapacityData[k].TotalAllocatableCPU)
 				fmt.Fprintf(w, "%s\t%s\t", &nodeRoleCapacityData[k].TotalRequestsCPU, &nodeRoleCapacityData[k].TotalLimitsCPU)
+				fmt.Fprintf(w, "%s\t", &nodeRoleCapacityData[k].TotalAvailableCPU)
 				fmt.Fprintf(w, "%s\t%s\t", &nodeRoleCapacityData[k].TotalCapacityMemory, &nodeRoleCapacityData[k].TotalAllocatableMemory)
-				fmt.Fprintf(w, "%s\t%s\t\n", &nodeRoleCapacityData[k].TotalRequestsMemory, &nodeRoleCapacityData[k].TotalLimitsMemory)
+				fmt.Fprintf(w, "%s\t%s\t", &nodeRoleCapacityData[k].TotalRequestsMemory, &nodeRoleCapacityData[k].TotalLimitsMemory)
+				fmt.Fprintf(w, "%s\t\n", &nodeRoleCapacityData[k].TotalAvailableMemory)
+			} else {
+				fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(nodeRoleCapacityData[k].TotalCapacityCPU), readableCPU(nodeRoleCapacityData[k].TotalAllocatableCPU))
+				fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(nodeRoleCapacityData[k].TotalRequestsCPU), readableCPU(nodeRoleCapacityData[k].TotalLimitsCPU))
+				fmt.Fprintf(w, "%.1f\t", readableCPU(nodeRoleCapacityData[k].TotalAvailableCPU))
+				fmt.Fprintf(w, "%.1f\t%.1f\t", readableMem(nodeRoleCapacityData[k].TotalCapacityMemory), readableMem(nodeRoleCapacityData[k].TotalAllocatableMemory))
+				fmt.Fprintf(w, "%.1f\t%.1f\t", readableMem(nodeRoleCapacityData[k].TotalRequestsMemory), readableMem(nodeRoleCapacityData[k].TotalLimitsMemory))
+				fmt.Fprintf(w, "%.1f\t\n", readableMem(nodeRoleCapacityData[k].TotalAvailableMemory))
 			}
 		}
 		w.Flush()
@@ -162,17 +183,18 @@ func DisplayNodeRoleData(nodeRoleCapacityData map[string]*ClusterCapacityData, s
 	}
 }
 
-func DisplayNodeData(nodesCapacityData map[string]*NodeCapacityData, sortedNodeNames []string, displayReadable bool, displayFormat string) {
+func DisplayNodeData(nodesCapacityData map[string]*NodeCapacityData, sortedNodeNames []string, displayDefault bool, displayNoHeaders bool, displayFormat string) {
 	if displayFormat == "table" {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 0, 5, 1, ' ', 0)
-		if displayReadable == true {
-			fmt.Fprintln(w, "NAME\tSTATUS\tROLES\tPODS\t\t\t\tCPU (cores)\t\t\t\tMEMORY (GiB)\t\t")
-		} else {
-			fmt.Fprintln(w, "NAME\tSTATUS\tROLES\tPODS\t\t\t\tCPU\t\t\t\tMEMORY\t\t")
+		if displayNoHeaders == false {
+			if displayDefault {
+				fmt.Fprintln(w, "NAME\tSTATUS\tROLES\tPODS\t\t\t\t\tCPU\t\t\t\t\tMEMORY\t\t\t")
+			} else {
+				fmt.Fprintln(w, "NAME\tSTATUS\tROLES\tPODS\t\t\t\t\tCPU (cores)\t\t\t\t\tMEMORY (GiB)\t\t\t")
+			}
+			fmt.Fprintln(w, "\t\t\tCapacity\tAllocatable\tTotal\tNon-Term\tAvailable\tCapacity\tAllocatable\tRequests\tLimits\tAvailable\tCapacity\tAllocatable\tRequests\tLimits\tAvailable")
 		}
-		fmt.Fprintln(w, "\t\t\tCapacity\tAllocatable\tTotal\tNon-Term\tCapacity\tAllocatable\tRequests\tLimits\tCapacity\tAllocatable\tRequests\tLimits")
-
 		for _, k := range sortedNodeNames {
 			fmt.Fprintf(w, "%s\t", k)
 			if k != "unassigned" {
@@ -189,16 +211,21 @@ func DisplayNodeData(nodesCapacityData map[string]*NodeCapacityData, sortedNodeN
 			fmt.Fprintf(w, "%s\t", strings.Join(nodesCapacityData[k].Roles.List(), ","))
 			fmt.Fprintf(w, "%s\t%s\t", &nodesCapacityData[k].TotalCapacityPods, &nodesCapacityData[k].TotalCapacityPods)
 			fmt.Fprintf(w, "%d\t%d\t", nodesCapacityData[k].TotalPodCount, nodesCapacityData[k].TotalNonTermPodCount)
-			if displayReadable == true {
-				fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(nodesCapacityData[k].TotalCapacityCPU), readableCPU(nodesCapacityData[k].TotalAllocatableCPU))
-				fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(nodesCapacityData[k].TotalRequestsCPU), readableCPU(nodesCapacityData[k].TotalLimitsCPU))
-				fmt.Fprintf(w, "%.1f\t%.1f\t", readableMem(nodesCapacityData[k].TotalCapacityMemory), readableMem(nodesCapacityData[k].TotalAllocatableMemory))
-				fmt.Fprintf(w, "%.1f\t%.1f\t\n", readableMem(nodesCapacityData[k].TotalRequestsMemory), readableMem(nodesCapacityData[k].TotalLimitsMemory))
-			} else {
+			fmt.Fprintf(w, "%d\t", nodesCapacityData[k].TotalAvailablePods)
+			if displayDefault {
 				fmt.Fprintf(w, "%s\t%s\t", &nodesCapacityData[k].TotalCapacityCPU, &nodesCapacityData[k].TotalAllocatableCPU)
 				fmt.Fprintf(w, "%s\t%s\t", &nodesCapacityData[k].TotalRequestsCPU, &nodesCapacityData[k].TotalLimitsCPU)
+				fmt.Fprintf(w, "%s\t", &nodesCapacityData[k].TotalAvailableCPU)
 				fmt.Fprintf(w, "%s\t%s\t", &nodesCapacityData[k].TotalCapacityMemory, &nodesCapacityData[k].TotalAllocatableMemory)
-				fmt.Fprintf(w, "%s\t%s\t\n", &nodesCapacityData[k].TotalRequestsMemory, &nodesCapacityData[k].TotalLimitsMemory)
+				fmt.Fprintf(w, "%s\t%s\t", &nodesCapacityData[k].TotalRequestsMemory, &nodesCapacityData[k].TotalLimitsMemory)
+				fmt.Fprintf(w, "%s\t\n", &nodesCapacityData[k].TotalAvailableMemory)
+			} else {
+				fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(nodesCapacityData[k].TotalCapacityCPU), readableCPU(nodesCapacityData[k].TotalAllocatableCPU))
+				fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(nodesCapacityData[k].TotalRequestsCPU), readableCPU(nodesCapacityData[k].TotalLimitsCPU))
+				fmt.Fprintf(w, "%.1f\t", readableCPU(nodesCapacityData[k].TotalAvailableCPU))
+				fmt.Fprintf(w, "%.1f\t%.1f\t", readableMem(nodesCapacityData[k].TotalCapacityMemory), readableMem(nodesCapacityData[k].TotalAllocatableMemory))
+				fmt.Fprintf(w, "%.1f\t%.1f\t", readableMem(nodesCapacityData[k].TotalRequestsMemory), readableMem(nodesCapacityData[k].TotalLimitsMemory))
+				fmt.Fprintf(w, "%.1f\t\n", readableMem(nodesCapacityData[k].TotalAvailableMemory))
 			}
 		}
 		w.Flush()
@@ -219,26 +246,28 @@ func DisplayNodeData(nodesCapacityData map[string]*NodeCapacityData, sortedNodeN
 	}
 }
 
-func DisplayNamespaceData(namespaceCapacityData map[string]*NamespaceCapacityData, sortedNamespaceNames []string, displayReadable bool, displayFormat string, displayAllNamespaces bool) {
+func DisplayNamespaceData(namespaceCapacityData map[string]*NamespaceCapacityData, sortedNamespaceNames []string, displayDefault bool, displayNoHeaders bool, displayFormat string, displayAllNamespaces bool) {
 	if displayFormat == "table" {
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 0, 5, 1, ' ', 0)
-		if displayReadable == true {
-			fmt.Fprintln(w, "NAMESPACE\tPODS\t\tCPU (cores)\t\tMEMORY (GiB)\t\t")
-		} else {
-			fmt.Fprintln(w, "NAMESPACE\tPODS\t\tCPU\t\tMEMORY\t\t")
+		if displayNoHeaders == false {
+			if displayDefault {
+				fmt.Fprintln(w, "NAMESPACE\tPODS\t\t\tCPU\t\tMEMORY\t\t")
+			} else {
+				fmt.Fprintln(w, "NAMESPACE\tPODS\t\t\tCPU (cores)\t\tMEMORY (GiB)\t\t")
+			}
+			fmt.Fprintln(w, "\tTotal\tNon-Term\tUnassigned\tRequests\tLimits\tRequests\tLimits")
 		}
-		fmt.Fprintln(w, "\tTotal\tNon-Term\tRequests\tLimits\tRequests\tLimits")
 		for _, k := range sortedNamespaceNames {
 			if (namespaceCapacityData[k].TotalPodCount != 0) || displayAllNamespaces {
 				fmt.Fprintf(w, "%s\t", k)
-				fmt.Fprintf(w, "%d\t%d\t", namespaceCapacityData[k].TotalPodCount, namespaceCapacityData[k].TotalNonTermPodCount)
-				if displayReadable == true {
-					fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(namespaceCapacityData[k].TotalRequestsCPU), readableCPU(namespaceCapacityData[k].TotalLimitsCPU))
-					fmt.Fprintf(w, "%.1f\t%.1f\t\n", readableMem(namespaceCapacityData[k].TotalRequestsMemory), readableMem(namespaceCapacityData[k].TotalLimitsMemory))
-				} else {
+				fmt.Fprintf(w, "%d\t%d\t%d\t", namespaceCapacityData[k].TotalPodCount, namespaceCapacityData[k].TotalNonTermPodCount, namespaceCapacityData[k].TotalUnassignedNodePodCount)
+				if displayDefault {
 					fmt.Fprintf(w, "%s\t%s\t", &namespaceCapacityData[k].TotalRequestsCPU, &namespaceCapacityData[k].TotalLimitsCPU)
 					fmt.Fprintf(w, "%s\t%s\t\n", &namespaceCapacityData[k].TotalRequestsMemory, &namespaceCapacityData[k].TotalLimitsMemory)
+				} else {
+					fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(namespaceCapacityData[k].TotalRequestsCPU), readableCPU(namespaceCapacityData[k].TotalLimitsCPU))
+					fmt.Fprintf(w, "%.1f\t%.1f\t\n", readableMem(namespaceCapacityData[k].TotalRequestsMemory), readableMem(namespaceCapacityData[k].TotalLimitsMemory))
 				}
 			}
 		}
