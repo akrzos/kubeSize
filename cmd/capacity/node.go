@@ -94,7 +94,7 @@ var nodeCmd = &cobra.Command{
 			nodesCapacityData[node.Name].TotalCapacityMemory.Add(*node.Status.Capacity.Memory())
 			nodesCapacityData[node.Name].TotalAllocatablePods.Add(*node.Status.Allocatable.Pods())
 			nodesCapacityData[node.Name].TotalAllocatableCPU.Add(*node.Status.Allocatable.Cpu())
-			nodesCapacityData[node.Name].TotalAllocatableMemory.Add(*node.Status.Capacity.Memory())
+			nodesCapacityData[node.Name].TotalAllocatableMemory.Add(*node.Status.Allocatable.Memory())
 		}
 		nodesCapacityData["unassigned"] = new(output.NodeCapacityData)
 
