@@ -92,7 +92,7 @@ func DisplayClusterData(clusterCapacityData ClusterCapacityData, displayDefault 
 			} else {
 				fmt.Fprintln(w, "NODES\t\t\t\tPODS\t\t\t\t\tCPU (cores)\t\t\t\t\tMEMORY (GiB)\t\t\t")
 			}
-			fmt.Fprintln(w, "Total\tReady\tUnready\tUnschedulable\tCapacity\tAllocatable\tTotal\tNon-Term\tAvailable\tCapacity\tAllocatable\tRequests\tLimits\tAvailable\tCapacity\tAllocatable\tRequests\tLimits\tAvailable")
+			fmt.Fprintln(w, "Total\tReady\tUnready\tUnsch\tCapacity\tAllocatable\tTotal\tNon-Term\tAvail\tCapacity\tAllocatable\tRequests\tLimits\tAvail\tCapacity\tAllocatable\tRequests\tLimits\tAvail")
 		}
 		fmt.Fprintf(w, "%d\t%d\t%d\t%d\t", clusterCapacityData.TotalNodeCount, clusterCapacityData.TotalReadyNodeCount, clusterCapacityData.TotalUnreadyNodeCount, clusterCapacityData.TotalUnschedulableNodeCount)
 		fmt.Fprintf(w, "%s\t%s\t", &clusterCapacityData.TotalCapacityPods, &clusterCapacityData.TotalAllocatablePods)
@@ -141,7 +141,7 @@ func DisplayNodeRoleData(nodeRoleCapacityData map[string]*ClusterCapacityData, s
 			} else {
 				fmt.Fprintln(w, "ROLE\tNODES\t\t\t\tPODS\t\t\t\t\tCPU (cores)\t\t\t\t\tMEMORY (GiB)\t\t\t")
 			}
-			fmt.Fprintln(w, "\tTotal\tReady\tUnready\tUnschedulable\tCapacity\tAllocatable\tTotal\tNon-Term\tAvailable\tCapacity\tAllocatable\tRequests\tLimits\tAvailable\tCapacity\tAllocatable\tRequests\tLimits\tAvailable")
+			fmt.Fprintln(w, "\tTotal\tReady\tUnready\tUnsch\tCapacity\tAllocatable\tTotal\tNon-Term\tAvail\tCapacity\tAllocatable\tRequests\tLimits\tAvail\tCapacity\tAllocatable\tRequests\tLimits\tAvail")
 		}
 		for _, k := range sortedRoleNames {
 			fmt.Fprintf(w, "%s\t", k)
@@ -193,7 +193,7 @@ func DisplayNodeData(nodesCapacityData map[string]*NodeCapacityData, sortedNodeN
 			} else {
 				fmt.Fprintln(w, "NAME\tSTATUS\tROLES\tPODS\t\t\t\t\tCPU (cores)\t\t\t\t\tMEMORY (GiB)\t\t\t")
 			}
-			fmt.Fprintln(w, "\t\t\tCapacity\tAllocatable\tTotal\tNon-Term\tAvailable\tCapacity\tAllocatable\tRequests\tLimits\tAvailable\tCapacity\tAllocatable\tRequests\tLimits\tAvailable")
+			fmt.Fprintln(w, "\t\t\tCapacity\tAllocatable\tTotal\tNon-Term\tAvail\tCapacity\tAllocatable\tRequests\tLimits\tAvail\tCapacity\tAllocatable\tRequests\tLimits\tAvail")
 		}
 		for _, k := range sortedNodeNames {
 			fmt.Fprintf(w, "%s\t", k)

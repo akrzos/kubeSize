@@ -20,6 +20,7 @@ import (
 	"os"
 	"sort"
 
+	"github.com/akrzos/kubeSize/internal/capacity"
 	"github.com/akrzos/kubeSize/internal/kube"
 	"github.com/akrzos/kubeSize/internal/output"
 	"github.com/pkg/errors"
@@ -76,7 +77,7 @@ var namespaceCmd = &cobra.Command{
 		}
 
 		for _, pod := range pods.Items {
-			if !stringInSlice(pod.Namespace, namespaceNames) {
+			if !capacity.StringInSlice(pod.Namespace, namespaceNames) {
 				namespaceNames = append(namespaceNames, pod.Namespace)
 				namespaceCapacityData[pod.Namespace] = new(output.NamespaceCapacityData)
 			}
@@ -114,13 +115,4 @@ var namespaceCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(namespaceCmd)
 	namespaceCmd.Flags().BoolP("all-namespaces", "A", false, "Include 0 pod namespaces in table output")
-}
-
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
 }

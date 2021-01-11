@@ -114,7 +114,6 @@ var nodeCmd = &cobra.Command{
 					nodesCapacityData[podNode].TotalLimitsMemory.Add(*container.Resources.Limits.Memory())
 				}
 			}
-
 		}
 
 		for _, node := range nodeNames {
@@ -132,7 +131,9 @@ var nodeCmd = &cobra.Command{
 		displayFormat, _ := cmd.Flags().GetString("output")
 
 		sort.Strings(nodeNames)
-		nodeNames = append(nodeNames, "unassigned")
+		if displayUnassigned, _ := cmd.Flags().GetBool("unassigned"); displayUnassigned {
+			nodeNames = append(nodeNames, "unassigned")
+		}
 
 		output.DisplayNodeData(nodesCapacityData, nodeNames, displayDefault, displayNoHeaders, displayFormat)
 
@@ -142,4 +143,5 @@ var nodeCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(nodeCmd)
+	nodeCmd.Flags().BoolP("unassigned", "u", false, "Include unassigned pod row, pods which do not have a node")
 }
