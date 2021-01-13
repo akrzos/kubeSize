@@ -94,11 +94,24 @@ var clusterCmd = &cobra.Command{
 			}
 		}
 
+		// Populate derived capacity data values
 		clusterCapacityData.TotalAvailablePods = int(clusterCapacityData.TotalAllocatablePods.Value()) - clusterCapacityData.TotalNonTermPodCount
 		clusterCapacityData.TotalAvailableCPU = clusterCapacityData.TotalAllocatableCPU
 		clusterCapacityData.TotalAvailableCPU.Sub(clusterCapacityData.TotalRequestsCPU)
 		clusterCapacityData.TotalAvailableMemory = clusterCapacityData.TotalAllocatableMemory
 		clusterCapacityData.TotalAvailableMemory.Sub(clusterCapacityData.TotalRequestsMemory)
+
+		// Populate "Human" readable capacity data values
+		clusterCapacityData.TotalCapacityCPUCores = output.ReadableCPU(clusterCapacityData.TotalCapacityCPU)
+		clusterCapacityData.TotalCapacityMemoryGiB = output.ReadableMem(clusterCapacityData.TotalCapacityMemory)
+		clusterCapacityData.TotalAllocatableCPUCores = output.ReadableCPU(clusterCapacityData.TotalAllocatableCPU)
+		clusterCapacityData.TotalAllocatableMemoryGiB = output.ReadableMem(clusterCapacityData.TotalAllocatableMemory)
+		clusterCapacityData.TotalAvailableCPUCores = output.ReadableCPU(clusterCapacityData.TotalAvailableCPU)
+		clusterCapacityData.TotalAvailableMemoryGiB = output.ReadableMem(clusterCapacityData.TotalAvailableMemory)
+		clusterCapacityData.TotalRequestsCPUCores = output.ReadableCPU(clusterCapacityData.TotalRequestsCPU)
+		clusterCapacityData.TotalLimitsCPUCores = output.ReadableCPU(clusterCapacityData.TotalLimitsCPU)
+		clusterCapacityData.TotalRequestsMemoryGiB = output.ReadableMem(clusterCapacityData.TotalRequestsMemory)
+		clusterCapacityData.TotalLimitsMemoryGiB = output.ReadableMem(clusterCapacityData.TotalLimitsMemory)
 
 		displayDefault, _ := cmd.Flags().GetBool("default-format")
 

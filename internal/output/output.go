@@ -38,17 +38,27 @@ type ClusterCapacityData struct {
 	TotalNonTermPodCount        int
 	TotalCapacityPods           resource.Quantity
 	TotalCapacityCPU            resource.Quantity
+	TotalCapacityCPUCores       float64
 	TotalCapacityMemory         resource.Quantity
+	TotalCapacityMemoryGiB      float64
 	TotalAllocatablePods        resource.Quantity
 	TotalAllocatableCPU         resource.Quantity
+	TotalAllocatableCPUCores    float64
 	TotalAllocatableMemory      resource.Quantity
+	TotalAllocatableMemoryGiB   float64
 	TotalAvailablePods          int
 	TotalRequestsCPU            resource.Quantity
+	TotalRequestsCPUCores       float64
 	TotalLimitsCPU              resource.Quantity
+	TotalLimitsCPUCores         float64
 	TotalAvailableCPU           resource.Quantity
+	TotalAvailableCPUCores      float64
 	TotalRequestsMemory         resource.Quantity
+	TotalRequestsMemoryGiB      float64
 	TotalLimitsMemory           resource.Quantity
+	TotalLimitsMemoryGiB        float64
 	TotalAvailableMemory        resource.Quantity
+	TotalAvailableMemoryGiB     float64
 }
 
 type NodeCapacityData struct {
@@ -106,12 +116,12 @@ func DisplayClusterData(clusterCapacityData ClusterCapacityData, displayDefault 
 			fmt.Fprintf(w, "%s\t%s\t", &clusterCapacityData.TotalRequestsMemory, &clusterCapacityData.TotalLimitsMemory)
 			fmt.Fprintf(w, "%s\t\n", &clusterCapacityData.TotalAvailableMemory)
 		} else {
-			fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(clusterCapacityData.TotalCapacityCPU), readableCPU(clusterCapacityData.TotalAllocatableCPU))
-			fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(clusterCapacityData.TotalRequestsCPU), readableCPU(clusterCapacityData.TotalLimitsCPU))
-			fmt.Fprintf(w, "%.1f\t", readableCPU(clusterCapacityData.TotalAvailableCPU))
-			fmt.Fprintf(w, "%.1f\t%.1f\t", readableMem(clusterCapacityData.TotalCapacityMemory), readableMem(clusterCapacityData.TotalAllocatableMemory))
-			fmt.Fprintf(w, "%.1f\t%.1f\t", readableMem(clusterCapacityData.TotalRequestsMemory), readableMem(clusterCapacityData.TotalLimitsMemory))
-			fmt.Fprintf(w, "%.1f\t\n", readableMem(clusterCapacityData.TotalAvailableMemory))
+			fmt.Fprintf(w, "%.1f\t%.1f\t", clusterCapacityData.TotalCapacityCPUCores, clusterCapacityData.TotalAllocatableCPUCores)
+			fmt.Fprintf(w, "%.1f\t%.1f\t", clusterCapacityData.TotalRequestsCPUCores, clusterCapacityData.TotalLimitsCPUCores)
+			fmt.Fprintf(w, "%.1f\t", clusterCapacityData.TotalAvailableCPUCores)
+			fmt.Fprintf(w, "%.1f\t%.1f\t", clusterCapacityData.TotalCapacityMemoryGiB, clusterCapacityData.TotalAllocatableMemoryGiB)
+			fmt.Fprintf(w, "%.1f\t%.1f\t", clusterCapacityData.TotalRequestsMemoryGiB, clusterCapacityData.TotalLimitsMemoryGiB)
+			fmt.Fprintf(w, "%.1f\t\n", clusterCapacityData.TotalAvailableMemoryGiB)
 		}
 		w.Flush()
 	} else if displayFormat == "json" {
@@ -157,12 +167,12 @@ func DisplayNodeRoleData(nodeRoleCapacityData map[string]*ClusterCapacityData, s
 				fmt.Fprintf(w, "%s\t%s\t", &nodeRoleCapacityData[k].TotalRequestsMemory, &nodeRoleCapacityData[k].TotalLimitsMemory)
 				fmt.Fprintf(w, "%s\t\n", &nodeRoleCapacityData[k].TotalAvailableMemory)
 			} else {
-				fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(nodeRoleCapacityData[k].TotalCapacityCPU), readableCPU(nodeRoleCapacityData[k].TotalAllocatableCPU))
-				fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(nodeRoleCapacityData[k].TotalRequestsCPU), readableCPU(nodeRoleCapacityData[k].TotalLimitsCPU))
-				fmt.Fprintf(w, "%.1f\t", readableCPU(nodeRoleCapacityData[k].TotalAvailableCPU))
-				fmt.Fprintf(w, "%.1f\t%.1f\t", readableMem(nodeRoleCapacityData[k].TotalCapacityMemory), readableMem(nodeRoleCapacityData[k].TotalAllocatableMemory))
-				fmt.Fprintf(w, "%.1f\t%.1f\t", readableMem(nodeRoleCapacityData[k].TotalRequestsMemory), readableMem(nodeRoleCapacityData[k].TotalLimitsMemory))
-				fmt.Fprintf(w, "%.1f\t\n", readableMem(nodeRoleCapacityData[k].TotalAvailableMemory))
+				fmt.Fprintf(w, "%.1f\t%.1f\t", ReadableCPU(nodeRoleCapacityData[k].TotalCapacityCPU), ReadableCPU(nodeRoleCapacityData[k].TotalAllocatableCPU))
+				fmt.Fprintf(w, "%.1f\t%.1f\t", ReadableCPU(nodeRoleCapacityData[k].TotalRequestsCPU), ReadableCPU(nodeRoleCapacityData[k].TotalLimitsCPU))
+				fmt.Fprintf(w, "%.1f\t", ReadableCPU(nodeRoleCapacityData[k].TotalAvailableCPU))
+				fmt.Fprintf(w, "%.1f\t%.1f\t", ReadableMem(nodeRoleCapacityData[k].TotalCapacityMemory), ReadableMem(nodeRoleCapacityData[k].TotalAllocatableMemory))
+				fmt.Fprintf(w, "%.1f\t%.1f\t", ReadableMem(nodeRoleCapacityData[k].TotalRequestsMemory), ReadableMem(nodeRoleCapacityData[k].TotalLimitsMemory))
+				fmt.Fprintf(w, "%.1f\t\n", ReadableMem(nodeRoleCapacityData[k].TotalAvailableMemory))
 			}
 		}
 		w.Flush()
@@ -220,12 +230,12 @@ func DisplayNodeData(nodesCapacityData map[string]*NodeCapacityData, sortedNodeN
 				fmt.Fprintf(w, "%s\t%s\t", &nodesCapacityData[k].TotalRequestsMemory, &nodesCapacityData[k].TotalLimitsMemory)
 				fmt.Fprintf(w, "%s\t\n", &nodesCapacityData[k].TotalAvailableMemory)
 			} else {
-				fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(nodesCapacityData[k].TotalCapacityCPU), readableCPU(nodesCapacityData[k].TotalAllocatableCPU))
-				fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(nodesCapacityData[k].TotalRequestsCPU), readableCPU(nodesCapacityData[k].TotalLimitsCPU))
-				fmt.Fprintf(w, "%.1f\t", readableCPU(nodesCapacityData[k].TotalAvailableCPU))
-				fmt.Fprintf(w, "%.1f\t%.1f\t", readableMem(nodesCapacityData[k].TotalCapacityMemory), readableMem(nodesCapacityData[k].TotalAllocatableMemory))
-				fmt.Fprintf(w, "%.1f\t%.1f\t", readableMem(nodesCapacityData[k].TotalRequestsMemory), readableMem(nodesCapacityData[k].TotalLimitsMemory))
-				fmt.Fprintf(w, "%.1f\t\n", readableMem(nodesCapacityData[k].TotalAvailableMemory))
+				fmt.Fprintf(w, "%.1f\t%.1f\t", ReadableCPU(nodesCapacityData[k].TotalCapacityCPU), ReadableCPU(nodesCapacityData[k].TotalAllocatableCPU))
+				fmt.Fprintf(w, "%.1f\t%.1f\t", ReadableCPU(nodesCapacityData[k].TotalRequestsCPU), ReadableCPU(nodesCapacityData[k].TotalLimitsCPU))
+				fmt.Fprintf(w, "%.1f\t", ReadableCPU(nodesCapacityData[k].TotalAvailableCPU))
+				fmt.Fprintf(w, "%.1f\t%.1f\t", ReadableMem(nodesCapacityData[k].TotalCapacityMemory), ReadableMem(nodesCapacityData[k].TotalAllocatableMemory))
+				fmt.Fprintf(w, "%.1f\t%.1f\t", ReadableMem(nodesCapacityData[k].TotalRequestsMemory), ReadableMem(nodesCapacityData[k].TotalLimitsMemory))
+				fmt.Fprintf(w, "%.1f\t\n", ReadableMem(nodesCapacityData[k].TotalAvailableMemory))
 			}
 		}
 		w.Flush()
@@ -266,8 +276,8 @@ func DisplayNamespaceData(namespaceCapacityData map[string]*NamespaceCapacityDat
 					fmt.Fprintf(w, "%s\t%s\t", &namespaceCapacityData[k].TotalRequestsCPU, &namespaceCapacityData[k].TotalLimitsCPU)
 					fmt.Fprintf(w, "%s\t%s\t\n", &namespaceCapacityData[k].TotalRequestsMemory, &namespaceCapacityData[k].TotalLimitsMemory)
 				} else {
-					fmt.Fprintf(w, "%.1f\t%.1f\t", readableCPU(namespaceCapacityData[k].TotalRequestsCPU), readableCPU(namespaceCapacityData[k].TotalLimitsCPU))
-					fmt.Fprintf(w, "%.1f\t%.1f\t\n", readableMem(namespaceCapacityData[k].TotalRequestsMemory), readableMem(namespaceCapacityData[k].TotalLimitsMemory))
+					fmt.Fprintf(w, "%.1f\t%.1f\t", ReadableCPU(namespaceCapacityData[k].TotalRequestsCPU), ReadableCPU(namespaceCapacityData[k].TotalLimitsCPU))
+					fmt.Fprintf(w, "%.1f\t%.1f\t\n", ReadableMem(namespaceCapacityData[k].TotalRequestsMemory), ReadableMem(namespaceCapacityData[k].TotalLimitsMemory))
 				}
 			}
 		}
@@ -300,12 +310,12 @@ func ValidateOutput(cmd cobra.Command) error {
 	return fmt.Errorf("Display Format \"%s\" is invalid. Valid values are %v", displayFormat, validOutputs)
 }
 
-func readableCPU(cpu resource.Quantity) float64 {
+func ReadableCPU(cpu resource.Quantity) float64 {
 	// Convert millicores to cores
 	return float64(cpu.MilliValue()) / 1000
 }
 
-func readableMem(mem resource.Quantity) float64 {
+func ReadableMem(mem resource.Quantity) float64 {
 	// Convert from KiB to GiB
 	return float64(mem.Value()) / 1024 / 1024 / 1024
 }
