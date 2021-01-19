@@ -20,7 +20,6 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
@@ -34,9 +33,6 @@ var rootCmd = &cobra.Command{
 	Long:          `Capacity exposes size and capacity data for Kubernetes clusters`,
 	SilenceErrors: true,
 	SilenceUsage:  true,
-	PreRun: func(cmd *cobra.Command, args []string) {
-		viper.BindPFlags(cmd.Flags())
-	},
 }
 
 func Execute() {
@@ -44,10 +40,6 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-}
-
-func initConfig() {
-	viper.AutomaticEnv()
 }
 
 func init() {

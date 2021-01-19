@@ -2,29 +2,29 @@
 
 kubeSize is a kubernetes CLI plugin to easily expose sizing and capacity data for Kubernetes clusters.
 
-# Develop
+## Develop
 
-## Compile
+### Compile
 
-```
-$ make bin
-```
-
-## Run
-
-```
-$ ./bin/capacity
+```sh
+make bin
 ```
 
-## Install as a plugin
+### Run
 
+```sh
+./bin/capacity
 ```
+
+### Install as a plugin
+
+```sh
 cp bin/capacity /usr/local/bin/kubectl-capacity
 ```
 
-## Use
+### Use
 
-```
+```sh
 $ kubectl capacity
 Capacity exposes size and capacity data for Kubernetes clusters
 
@@ -47,11 +47,13 @@ Flags:
       --client-key string              Path to a client key file for TLS
       --cluster string                 The name of the kubeconfig cluster to use
       --context string                 The name of the kubeconfig context to use
+  -d, --default-format                 Use default format of displaying resource quantities
   -h, --help                           help for capacity
       --insecure-skip-tls-verify       If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure
       --kubeconfig string              Path to the kubeconfig file to use for CLI requests.
   -n, --namespace string               If present, the namespace scope for this CLI request
-  -r, --readable                       Human readable resources (CPU in Cores, Memory in GiB)
+      --no-headers                     No headers in table output format
+  -o, --output string                  Output format. One of: table|json|yaml (default "table")
       --request-timeout string         The length of time to wait before giving up on a single server request. Non-zero values should contain a corresponding time unit (e.g. 1s, 2m, 3h). A value of zero means don't timeout requests. (default "0")
   -s, --server string                  The address and port of the Kubernetes API server
       --token string                   Bearer token for authentication to the API server

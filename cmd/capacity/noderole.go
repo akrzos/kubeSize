@@ -26,7 +26,6 @@ import (
 	"github.com/akrzos/kubeSize/internal/output"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -38,9 +37,8 @@ var nodeRoleCmd = &cobra.Command{
 	Short:   "Get cluster capacity grouped by node role",
 	Long:    `Get Kubernetes cluster size and capacity metrics grouped by node role`,
 	PreRun: func(cmd *cobra.Command, args []string) {
-		viper.BindPFlags(cmd.Flags())
 		if err := output.ValidateOutput(*cmd); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
 	},
@@ -57,6 +55,9 @@ var nodeRoleCmd = &cobra.Command{
 		}
 
 		pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
+		if err != nil {
+			return errors.Wrap(err, "failed to list namespaces")
+		}
 
 		nodeRoleCapacityData := make(map[string]*output.ClusterCapacityData)
 		nodeRoles := make(map[string][]string)
@@ -143,7 +144,7 @@ var nodeRoleCmd = &cobra.Command{
 			roleNames = append(roleNames, "unassigned")
 		}
 
-		output.DisplayNodeRoleData(nodeRoleCapacityData, roleNames, displayDefault, displayNoHeaders, displayFormat)
+		output.DisplayNodeRoleData(nodeRoleCapacityData, roleNames, displayDefault, !displayNoHeaders, displayFormat)
 
 		return nil
 	},

@@ -23,7 +23,6 @@ import (
 	"github.com/akrzos/kubeSize/internal/output"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -35,9 +34,8 @@ var clusterCmd = &cobra.Command{
 	Short:   "Get cluster size and capacity",
 	Long:    `Get Kubernetes cluster size and capacity metrics`,
 	PreRun: func(cmd *cobra.Command, args []string) {
-		viper.BindPFlags(cmd.Flags())
 		if err := output.ValidateOutput(*cmd); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
 	},
@@ -51,6 +49,21 @@ var clusterCmd = &cobra.Command{
 		nodes, err := clientset.CoreV1().Nodes().List(metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list nodes")
+		}
+
+		totalPodsList, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
+		if err != nil {
+			return errors.Wrap(err, "failed to list pods")
+		}
+
+		// Note you can have non-terminated pod not assigned to a node (Ex Pending) thus cluster vs node/node-role counts can differ
+		fieldSelector, err := fields.ParseSelector("status.phase!=" + string(corev1.PodSucceeded) + ",status.phase!=" + string(corev1.PodFailed))
+		if err != nil {
+			return errors.Wrap(err, "failed to create fieldSelector")
+		}
+		totalNonTermPodsList, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{FieldSelector: fieldSelector.String()})
+		if err != nil {
+			return errors.Wrap(err, "failed to list non-term pods")
 		}
 
 		clusterCapacityData := new(output.ClusterCapacityData)
@@ -74,15 +87,7 @@ var clusterCmd = &cobra.Command{
 		}
 		clusterCapacityData.TotalUnreadyNodeCount = clusterCapacityData.TotalNodeCount - clusterCapacityData.TotalReadyNodeCount
 
-		totalPodsList, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
 		clusterCapacityData.TotalPodCount = len(totalPodsList.Items)
-
-		// Note you can have non-terminated pod not assigned to a node (Ex Pending) thus cluster vs node/node-role counts can differ
-		fieldSelector, err := fields.ParseSelector("status.phase!=" + string(corev1.PodSucceeded) + ",status.phase!=" + string(corev1.PodFailed))
-		if err != nil {
-			return errors.Wrap(err, "failed to create fieldSelector")
-		}
-		totalNonTermPodsList, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{FieldSelector: fieldSelector.String()})
 		clusterCapacityData.TotalNonTermPodCount = len(totalNonTermPodsList.Items)
 
 		for _, pod := range totalNonTermPodsList.Items {
@@ -119,7 +124,7 @@ var clusterCmd = &cobra.Command{
 
 		displayFormat, _ := cmd.Flags().GetString("output")
 
-		output.DisplayClusterData(*clusterCapacityData, displayDefault, displayNoHeaders, displayFormat)
+		output.DisplayClusterData(*clusterCapacityData, displayDefault, !displayNoHeaders, displayFormat)
 
 		return nil
 	},

@@ -25,7 +25,6 @@ import (
 	"github.com/akrzos/kubeSize/internal/output"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -37,9 +36,8 @@ var nodeCmd = &cobra.Command{
 	Short:   "Get individual node capacity",
 	Long:    `Get individual node size and capacity metrics grouped by node role`,
 	PreRun: func(cmd *cobra.Command, args []string) {
-		viper.BindPFlags(cmd.Flags())
 		if err := output.ValidateOutput(*cmd); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
 	},
@@ -56,6 +54,9 @@ var nodeCmd = &cobra.Command{
 		}
 
 		pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
+		if err != nil {
+			return errors.Wrap(err, "failed to list pods")
+		}
 
 		nodesCapacityData := make(map[string]*output.NodeCapacityData)
 		nodeNames := make([]string, 0, len(nodes.Items))
@@ -135,7 +136,7 @@ var nodeCmd = &cobra.Command{
 			nodeNames = append(nodeNames, "unassigned")
 		}
 
-		output.DisplayNodeData(nodesCapacityData, nodeNames, displayDefault, displayNoHeaders, displayFormat)
+		output.DisplayNodeData(nodesCapacityData, nodeNames, displayDefault, !displayNoHeaders, displayFormat)
 
 		return nil
 	},

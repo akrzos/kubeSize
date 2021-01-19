@@ -21,8 +21,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func CreateClientSet(KubernetesConfigFlags *genericclioptions.ConfigFlags) (*kubernetes.Clientset, error) {
-	config, err := KubernetesConfigFlags.ToRESTConfig()
+func CreateClientSet(kubernetesConfigFlags *genericclioptions.ConfigFlags) (*kubernetes.Clientset, error) {
+	config, err := kubernetesConfigFlags.ToRESTConfig()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read kubeconfig")
 	}

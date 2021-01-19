@@ -28,6 +28,12 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+const (
+	tableDisplay string = "table"
+	jsonDisplay  string = "json"
+	yamlDisplay  string = "yaml"
+)
+
 // Available = allocatable - (scheduled aka non-term pod or requests.cpu/memory)
 type ClusterCapacityData struct {
 	TotalNodeCount              int
@@ -92,11 +98,26 @@ type NamespaceCapacityData struct {
 	TotalLimitsMemory           resource.Quantity
 }
 
-func DisplayClusterData(clusterCapacityData ClusterCapacityData, displayDefault bool, displayNoHeaders bool, displayFormat string) {
-	if displayFormat == "table" {
+func DisplayClusterData(clusterCapacityData ClusterCapacityData, displayDefault bool, displayHeaders bool, displayFormat string) {
+	switch displayFormat {
+	case jsonDisplay:
+		jsonClusterData, err := json.MarshalIndent(&clusterCapacityData, "", "  ")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(string(jsonClusterData))
+	case yamlDisplay:
+		yamlClusterData, err := yaml.Marshal(clusterCapacityData)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Print(string(yamlClusterData))
+	default:
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 0, 5, 1, ' ', 0)
-		if displayNoHeaders == false {
+		if displayHeaders {
 			if displayDefault {
 				fmt.Fprintln(w, "NODES\t\t\t\tPODS\t\t\t\t\tCPU\t\t\t\t\tMEMORY\t\t\t")
 			} else {
@@ -124,28 +145,29 @@ func DisplayClusterData(clusterCapacityData ClusterCapacityData, displayDefault 
 			fmt.Fprintf(w, "%.1f\t\n", clusterCapacityData.TotalAvailableMemoryGiB)
 		}
 		w.Flush()
-	} else if displayFormat == "json" {
-		jsonClusterData, err := json.MarshalIndent(&clusterCapacityData, "", "  ")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(string(jsonClusterData))
-	} else if displayFormat == "yaml" {
-		yamlClusterData, err := yaml.Marshal(clusterCapacityData)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Printf(string(yamlClusterData))
 	}
 }
 
-func DisplayNodeRoleData(nodeRoleCapacityData map[string]*ClusterCapacityData, sortedRoleNames []string, displayDefault bool, displayNoHeaders bool, displayFormat string) {
-	if displayFormat == "table" {
+func DisplayNodeRoleData(nodeRoleCapacityData map[string]*ClusterCapacityData, sortedRoleNames []string, displayDefault bool, displayHeaders bool, displayFormat string) {
+	switch displayFormat {
+	case jsonDisplay:
+		jsonNodeRoleData, err := json.MarshalIndent(&nodeRoleCapacityData, "", "  ")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(string(jsonNodeRoleData))
+	case yamlDisplay:
+		yamlNodeRoleData, err := yaml.Marshal(nodeRoleCapacityData)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Print(string(yamlNodeRoleData))
+	default:
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 0, 5, 1, ' ', 0)
-		if displayNoHeaders == false {
+		if displayHeaders {
 			if displayDefault {
 				fmt.Fprintln(w, "ROLE\tNODES\t\t\t\tPODS\t\t\t\t\tCPU\t\t\t\t\tMEMORY\t\t\t")
 			} else {
@@ -176,28 +198,29 @@ func DisplayNodeRoleData(nodeRoleCapacityData map[string]*ClusterCapacityData, s
 			}
 		}
 		w.Flush()
-	} else if displayFormat == "json" {
-		jsonNodeRoleData, err := json.MarshalIndent(&nodeRoleCapacityData, "", "  ")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(string(jsonNodeRoleData))
-	} else if displayFormat == "yaml" {
-		yamlNodeRoleData, err := yaml.Marshal(nodeRoleCapacityData)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Printf(string(yamlNodeRoleData))
 	}
 }
 
-func DisplayNodeData(nodesCapacityData map[string]*NodeCapacityData, sortedNodeNames []string, displayDefault bool, displayNoHeaders bool, displayFormat string) {
-	if displayFormat == "table" {
+func DisplayNodeData(nodesCapacityData map[string]*NodeCapacityData, sortedNodeNames []string, displayDefault bool, displayHeaders bool, displayFormat string) {
+	switch displayFormat {
+	case jsonDisplay:
+		jsonNodeData, err := json.MarshalIndent(&nodesCapacityData, "", "  ")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(string(jsonNodeData))
+	case yamlDisplay:
+		yamlNodeData, err := yaml.Marshal(nodesCapacityData)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Print(string(yamlNodeData))
+	default:
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 0, 5, 1, ' ', 0)
-		if displayNoHeaders == false {
+		if displayHeaders {
 			if displayDefault {
 				fmt.Fprintln(w, "NAME\tSTATUS\tROLES\tPODS\t\t\t\t\tCPU\t\t\t\t\tMEMORY\t\t\t")
 			} else {
@@ -239,28 +262,29 @@ func DisplayNodeData(nodesCapacityData map[string]*NodeCapacityData, sortedNodeN
 			}
 		}
 		w.Flush()
-	} else if displayFormat == "json" {
-		jsonNodeData, err := json.MarshalIndent(&nodesCapacityData, "", "  ")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(string(jsonNodeData))
-	} else if displayFormat == "yaml" {
-		yamlNodeData, err := yaml.Marshal(nodesCapacityData)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Printf(string(yamlNodeData))
 	}
 }
 
-func DisplayNamespaceData(namespaceCapacityData map[string]*NamespaceCapacityData, sortedNamespaceNames []string, displayDefault bool, displayNoHeaders bool, displayFormat string, displayAllNamespaces bool) {
-	if displayFormat == "table" {
+func DisplayNamespaceData(namespaceCapacityData map[string]*NamespaceCapacityData, sortedNamespaceNames []string, displayDefault bool, displayHeaders bool, displayFormat string, displayAllNamespaces bool) {
+	switch displayFormat {
+	case jsonDisplay:
+		jsonNamespaceData, err := json.MarshalIndent(&namespaceCapacityData, "", "  ")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(string(jsonNamespaceData))
+	case yamlDisplay:
+		yamlNamespaceData, err := yaml.Marshal(namespaceCapacityData)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Print(string(yamlNamespaceData))
+	default:
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 0, 5, 1, ' ', 0)
-		if displayNoHeaders == false {
+		if displayHeaders {
 			if displayDefault {
 				fmt.Fprintln(w, "NAMESPACE\tPODS\t\t\tCPU\t\tMEMORY\t\t")
 			} else {
@@ -282,26 +306,15 @@ func DisplayNamespaceData(namespaceCapacityData map[string]*NamespaceCapacityDat
 			}
 		}
 		w.Flush()
-	} else if displayFormat == "json" {
-		jsonNamespaceData, err := json.MarshalIndent(&namespaceCapacityData, "", "  ")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(string(jsonNamespaceData))
-	} else if displayFormat == "yaml" {
-		yamlNamespaceData, err := yaml.Marshal(namespaceCapacityData)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Printf(string(yamlNamespaceData))
 	}
 }
 
 func ValidateOutput(cmd cobra.Command) error {
-	displayFormat, _ := cmd.Flags().GetString("output")
-	validOutputs := []string{"table", "json", "yaml"}
+	displayFormat, err := cmd.Flags().GetString("output")
+	if err != nil {
+		return fmt.Errorf("unable to get output display format")
+	}
+	validOutputs := []string{tableDisplay, jsonDisplay, yamlDisplay}
 	for _, validOutputFormat := range validOutputs {
 		if displayFormat == validOutputFormat {
 			return nil
