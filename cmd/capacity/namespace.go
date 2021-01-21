@@ -32,7 +32,7 @@ import (
 
 var namespaceCmd = &cobra.Command{
 	Use:     "namespace",
-	Aliases: []string{"na"},
+	Aliases: []string{"ns"},
 	Short:   "Get namespace size",
 	Long:    `Get namespace size and capacity metrics`,
 	PreRun: func(cmd *cobra.Command, args []string) {
