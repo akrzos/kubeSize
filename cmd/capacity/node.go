@@ -60,6 +60,7 @@ var nodeCmd = &cobra.Command{
 
 		nodesCapacityData := make(map[string]*output.NodeCapacityData)
 		nodeNames := make([]string, 0, len(nodes.Items))
+		nodesByRole := make(map[string][]string)
 
 		for _, node := range nodes.Items {
 			nodeNames = append(nodeNames, node.Name)
@@ -96,6 +97,9 @@ var nodeCmd = &cobra.Command{
 			nodesCapacityData[node.Name].TotalAllocatablePods.Add(*node.Status.Allocatable.Pods())
 			nodesCapacityData[node.Name].TotalAllocatableCPU.Add(*node.Status.Allocatable.Cpu())
 			nodesCapacityData[node.Name].TotalAllocatableMemory.Add(*node.Status.Allocatable.Memory())
+			for _, role := range roles.List() {
+				nodesByRole[role] = append(nodesByRole[role], node.Name)
+			}
 		}
 		nodesCapacityData["unassigned"] = new(output.NodeCapacityData)
 
@@ -134,9 +138,12 @@ var nodeCmd = &cobra.Command{
 		sort.Strings(nodeNames)
 		if displayUnassigned, _ := cmd.Flags().GetBool("unassigned"); displayUnassigned {
 			nodeNames = append(nodeNames, "unassigned")
+			nodesByRole["~"] = append(nodesByRole["~"], "unassigned")
 		}
 
-		output.DisplayNodeData(nodesCapacityData, nodeNames, displayDefault, !displayNoHeaders, displayFormat)
+		sortByRole, _ := cmd.Flags().GetBool("sort-by-role")
+
+		output.DisplayNodeData(nodesCapacityData, nodeNames, displayDefault, !displayNoHeaders, displayFormat, sortByRole, nodesByRole)
 
 		return nil
 	},
@@ -145,4 +152,5 @@ var nodeCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(nodeCmd)
 	nodeCmd.Flags().BoolP("unassigned", "u", false, "Include unassigned pod row, pods which do not have a node")
+	nodeCmd.Flags().BoolP("sort-by-role", "r", false, "Sort output by node-role")
 }

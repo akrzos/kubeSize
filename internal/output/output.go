@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 	"text/tabwriter"
 
@@ -201,7 +202,7 @@ func DisplayNodeRoleData(nodeRoleCapacityData map[string]*ClusterCapacityData, s
 	}
 }
 
-func DisplayNodeData(nodesCapacityData map[string]*NodeCapacityData, sortedNodeNames []string, displayDefault bool, displayHeaders bool, displayFormat string) {
+func DisplayNodeData(nodesCapacityData map[string]*NodeCapacityData, sortedNodeNames []string, displayDefault bool, displayHeaders bool, displayFormat string, sortByRole bool, nodesByRole map[string][]string) {
 	switch displayFormat {
 	case jsonDisplay:
 		jsonNodeData, err := json.MarshalIndent(&nodesCapacityData, "", "  ")
@@ -228,40 +229,62 @@ func DisplayNodeData(nodesCapacityData map[string]*NodeCapacityData, sortedNodeN
 			}
 			fmt.Fprintln(w, "\t\t\tCapacity\tAllocatable\tTotal\tNon-Term\tAvail\tCapacity\tAllocatable\tRequests\tLimits\tAvail\tCapacity\tAllocatable\tRequests\tLimits\tAvail")
 		}
-		for _, k := range sortedNodeNames {
-			fmt.Fprintf(w, "%s\t", k)
-			if k != "unassigned" {
-				if nodesCapacityData[k].Ready {
-					fmt.Fprint(w, "Ready")
-				} else {
-					fmt.Fprint(w, "NotReady")
-				}
-				if !nodesCapacityData[k].Schedulable {
-					fmt.Fprintf(w, ",Unschedulable")
+
+		if sortByRole {
+			// Sort by role
+			roles := make([]string, 0, len(nodesByRole))
+			for role := range nodesByRole {
+				roles = append(roles, role)
+			}
+			sort.Strings(roles)
+
+			for _, role := range roles {
+				for _, node := range nodesByRole[role] {
+					printNodeData(w, node, nodesCapacityData[node], displayDefault)
 				}
 			}
-			fmt.Fprintf(w, "\t")
-			fmt.Fprintf(w, "%s\t", strings.Join(nodesCapacityData[k].Roles.List(), ","))
-			fmt.Fprintf(w, "%s\t%s\t", &nodesCapacityData[k].TotalCapacityPods, &nodesCapacityData[k].TotalCapacityPods)
-			fmt.Fprintf(w, "%d\t%d\t", nodesCapacityData[k].TotalPodCount, nodesCapacityData[k].TotalNonTermPodCount)
-			fmt.Fprintf(w, "%d\t", nodesCapacityData[k].TotalAvailablePods)
-			if displayDefault {
-				fmt.Fprintf(w, "%s\t%s\t", &nodesCapacityData[k].TotalCapacityCPU, &nodesCapacityData[k].TotalAllocatableCPU)
-				fmt.Fprintf(w, "%s\t%s\t", &nodesCapacityData[k].TotalRequestsCPU, &nodesCapacityData[k].TotalLimitsCPU)
-				fmt.Fprintf(w, "%s\t", &nodesCapacityData[k].TotalAvailableCPU)
-				fmt.Fprintf(w, "%s\t%s\t", &nodesCapacityData[k].TotalCapacityMemory, &nodesCapacityData[k].TotalAllocatableMemory)
-				fmt.Fprintf(w, "%s\t%s\t", &nodesCapacityData[k].TotalRequestsMemory, &nodesCapacityData[k].TotalLimitsMemory)
-				fmt.Fprintf(w, "%s\t\n", &nodesCapacityData[k].TotalAvailableMemory)
-			} else {
-				fmt.Fprintf(w, "%.1f\t%.1f\t", ReadableCPU(nodesCapacityData[k].TotalCapacityCPU), ReadableCPU(nodesCapacityData[k].TotalAllocatableCPU))
-				fmt.Fprintf(w, "%.1f\t%.1f\t", ReadableCPU(nodesCapacityData[k].TotalRequestsCPU), ReadableCPU(nodesCapacityData[k].TotalLimitsCPU))
-				fmt.Fprintf(w, "%.1f\t", ReadableCPU(nodesCapacityData[k].TotalAvailableCPU))
-				fmt.Fprintf(w, "%.1f\t%.1f\t", ReadableMem(nodesCapacityData[k].TotalCapacityMemory), ReadableMem(nodesCapacityData[k].TotalAllocatableMemory))
-				fmt.Fprintf(w, "%.1f\t%.1f\t", ReadableMem(nodesCapacityData[k].TotalRequestsMemory), ReadableMem(nodesCapacityData[k].TotalLimitsMemory))
-				fmt.Fprintf(w, "%.1f\t\n", ReadableMem(nodesCapacityData[k].TotalAvailableMemory))
+		} else {
+			// Sort by Node Name
+			for _, k := range sortedNodeNames {
+				printNodeData(w, k, nodesCapacityData[k], displayDefault)
 			}
 		}
+
 		w.Flush()
+	}
+}
+
+func printNodeData(w *tabwriter.Writer, nodeName string, nodeData *NodeCapacityData, displayDefault bool) {
+	fmt.Fprintf(w, "%s\t", nodeName)
+	if nodeName != "unassigned" {
+		if nodeData.Ready {
+			fmt.Fprint(w, "Ready")
+		} else {
+			fmt.Fprint(w, "NotReady")
+		}
+		if !nodeData.Schedulable {
+			fmt.Fprintf(w, ",Unschedulable")
+		}
+	}
+	fmt.Fprintf(w, "\t")
+	fmt.Fprintf(w, "%s\t", strings.Join(nodeData.Roles.List(), ","))
+	fmt.Fprintf(w, "%s\t%s\t", &nodeData.TotalCapacityPods, &nodeData.TotalCapacityPods)
+	fmt.Fprintf(w, "%d\t%d\t", nodeData.TotalPodCount, nodeData.TotalNonTermPodCount)
+	fmt.Fprintf(w, "%d\t", nodeData.TotalAvailablePods)
+	if displayDefault {
+		fmt.Fprintf(w, "%s\t%s\t", &nodeData.TotalCapacityCPU, &nodeData.TotalAllocatableCPU)
+		fmt.Fprintf(w, "%s\t%s\t", &nodeData.TotalRequestsCPU, &nodeData.TotalLimitsCPU)
+		fmt.Fprintf(w, "%s\t", &nodeData.TotalAvailableCPU)
+		fmt.Fprintf(w, "%s\t%s\t", &nodeData.TotalCapacityMemory, &nodeData.TotalAllocatableMemory)
+		fmt.Fprintf(w, "%s\t%s\t", &nodeData.TotalRequestsMemory, &nodeData.TotalLimitsMemory)
+		fmt.Fprintf(w, "%s\t\n", &nodeData.TotalAvailableMemory)
+	} else {
+		fmt.Fprintf(w, "%.1f\t%.1f\t", ReadableCPU(nodeData.TotalCapacityCPU), ReadableCPU(nodeData.TotalAllocatableCPU))
+		fmt.Fprintf(w, "%.1f\t%.1f\t", ReadableCPU(nodeData.TotalRequestsCPU), ReadableCPU(nodeData.TotalLimitsCPU))
+		fmt.Fprintf(w, "%.1f\t", ReadableCPU(nodeData.TotalAvailableCPU))
+		fmt.Fprintf(w, "%.1f\t%.1f\t", ReadableMem(nodeData.TotalCapacityMemory), ReadableMem(nodeData.TotalAllocatableMemory))
+		fmt.Fprintf(w, "%.1f\t%.1f\t", ReadableMem(nodeData.TotalRequestsMemory), ReadableMem(nodeData.TotalLimitsMemory))
+		fmt.Fprintf(w, "%.1f\t\n", ReadableMem(nodeData.TotalAvailableMemory))
 	}
 }
 
