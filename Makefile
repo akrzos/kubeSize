@@ -7,7 +7,7 @@ test:
 
 .PHONY: bin
 bin: fmt vet
-	go build -o bin/capacity github.com/akrzos/kubeSize/
+	go build -o bin/kubectl-capacity github.com/akrzos/kubeSize/
 
 .PHONY: fmt
 fmt:

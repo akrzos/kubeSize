@@ -1,0 +1,28 @@
+
+project_name: kubeSize
+release:
+  github:
+    owner: akrzos
+    name: kubeSize
+builds:
+  - id: kubeSize
+    binary: kubectl-capacity
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+archives:
+  - replacements:
+      darwin: macOS
+      linux: Linux
+      windows: Windows
+      386: i386
+      amd64: x86_64
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
