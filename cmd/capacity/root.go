@@ -30,7 +30,7 @@ var (
 var rootCmd = &cobra.Command{
 	Use:           "capacity",
 	Short:         "Get cluster size and capacity",
-	Long:          `Capacity exposes size and capacity data for Kubernetes clusters`,
+	Long:          `Exposes size and capacity data for Kubernetes clusters`,
 	SilenceErrors: true,
 	SilenceUsage:  true,
 }

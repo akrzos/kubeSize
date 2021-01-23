@@ -13,13 +13,13 @@ make bin
 ### Run
 
 ```sh
-./bin/capacity
+./bin/kubectl-capacity
 ```
 
-### Install as a plugin
+### Install as a kubectl plugin
 
 ```sh
-cp bin/capacity /usr/local/bin/kubectl-capacity
+cp bin/kubectl-capacity /usr/local/bin/kubectl-capacity
 ```
 
 ### Use
