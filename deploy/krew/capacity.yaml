@@ -1,0 +1,32 @@
+apiVersion: krew.googlecontainertools.github.com/v1alpha2
+kind: Plugin
+metadata:
+  name: capacity
+spec:
+  version: "v0.1.1"
+  homepage: https://github.com/akrzos/kubeSize
+  shortDescription: "Get cluster size and capacity"
+  description: |
+    Exposes size and capacity data for Kubernetes clusters
+  platforms:
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: amd64
+    uri: https://github.com/akrzos/kubeSize/releases/download/v0.1.1/kubeSize_0.1.1_macOS_x86_64.tar.gz
+    sha256: ba8dae3d52a6ab489021d8dab9de4f63b1c7ff5245c3f0f00db8ae487292444a
+    bin: kubectl-capacity
+  - selector:
+      matchLabels:
+        os: linux
+        arch: amd64
+    uri: https://github.com/akrzos/kubeSize/releases/download/v0.1.1/kubeSize_0.1.1_Linux_x86_64.tar.gz
+    sha256: 41154a33d9571e9a6073e83eab86cac986839e7909df14f98b3104e84feb0a9c
+    bin: kubectl-capacity
+  - selector:
+      matchLabels:
+        os: windows
+        arch: amd64
+    uri: https://github.com/akrzos/kubeSize/releases/download/v0.1.1/kubeSize_0.1.1_Windows_x86_64.tar.gz
+    sha256: 7ca6731a38b59ba64836fe6b600326262d922ef095288fda0db0cd97e66bdb7d
+    bin: kubectl-capacity.exe
