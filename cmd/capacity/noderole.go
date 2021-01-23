@@ -144,6 +144,20 @@ var nodeRoleCmd = &cobra.Command{
 			roleNames = append(roleNames, "unassigned")
 		}
 
+		// Populate "Human" readable capacity data values
+		for _, role := range roleNames {
+			nodeRoleCapacityData[role].TotalCapacityCPUCores = capacity.ReadableCPU(nodeRoleCapacityData[role].TotalCapacityCPU)
+			nodeRoleCapacityData[role].TotalCapacityMemoryGiB = capacity.ReadableMem(nodeRoleCapacityData[role].TotalCapacityMemory)
+			nodeRoleCapacityData[role].TotalAllocatableCPUCores = capacity.ReadableCPU(nodeRoleCapacityData[role].TotalAllocatableCPU)
+			nodeRoleCapacityData[role].TotalAllocatableMemoryGiB = capacity.ReadableMem(nodeRoleCapacityData[role].TotalAllocatableMemory)
+			nodeRoleCapacityData[role].TotalRequestsCPUCores = capacity.ReadableCPU(nodeRoleCapacityData[role].TotalRequestsCPU)
+			nodeRoleCapacityData[role].TotalLimitsCPUCores = capacity.ReadableCPU(nodeRoleCapacityData[role].TotalLimitsCPU)
+			nodeRoleCapacityData[role].TotalAvailableCPUCores = capacity.ReadableCPU(nodeRoleCapacityData[role].TotalAvailableCPU)
+			nodeRoleCapacityData[role].TotalRequestsMemoryGiB = capacity.ReadableMem(nodeRoleCapacityData[role].TotalRequestsMemory)
+			nodeRoleCapacityData[role].TotalLimitsMemoryGiB = capacity.ReadableMem(nodeRoleCapacityData[role].TotalLimitsMemory)
+			nodeRoleCapacityData[role].TotalAvailableMemoryGiB = capacity.ReadableMem(nodeRoleCapacityData[role].TotalAvailableMemory)
+		}
+
 		output.DisplayNodeRoleData(nodeRoleCapacityData, roleNames, displayDefault, !displayNoHeaders, displayFormat)
 
 		return nil

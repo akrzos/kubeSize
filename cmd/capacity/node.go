@@ -21,6 +21,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/akrzos/kubeSize/internal/capacity"
 	"github.com/akrzos/kubeSize/internal/kube"
 	"github.com/akrzos/kubeSize/internal/output"
 	"github.com/pkg/errors"
@@ -139,6 +140,20 @@ var nodeCmd = &cobra.Command{
 		if displayUnassigned, _ := cmd.Flags().GetBool("unassigned"); displayUnassigned {
 			nodeNames = append(nodeNames, "unassigned")
 			nodesByRole["~"] = append(nodesByRole["~"], "unassigned")
+		}
+
+		// Populate "Human" readable capacity data values
+		for _, node := range nodeNames {
+			nodesCapacityData[node].TotalCapacityCPUCores = capacity.ReadableCPU(nodesCapacityData[node].TotalCapacityCPU)
+			nodesCapacityData[node].TotalCapacityMemoryGiB = capacity.ReadableMem(nodesCapacityData[node].TotalCapacityMemory)
+			nodesCapacityData[node].TotalAllocatableCPUCores = capacity.ReadableCPU(nodesCapacityData[node].TotalAllocatableCPU)
+			nodesCapacityData[node].TotalAllocatableMemoryGiB = capacity.ReadableMem(nodesCapacityData[node].TotalAllocatableMemory)
+			nodesCapacityData[node].TotalRequestsCPUCores = capacity.ReadableCPU(nodesCapacityData[node].TotalRequestsCPU)
+			nodesCapacityData[node].TotalLimitsCPUCores = capacity.ReadableCPU(nodesCapacityData[node].TotalLimitsCPU)
+			nodesCapacityData[node].TotalAvailableCPUCores = capacity.ReadableCPU(nodesCapacityData[node].TotalAvailableCPU)
+			nodesCapacityData[node].TotalRequestsMemoryGiB = capacity.ReadableMem(nodesCapacityData[node].TotalRequestsMemory)
+			nodesCapacityData[node].TotalLimitsMemoryGiB = capacity.ReadableMem(nodesCapacityData[node].TotalLimitsMemory)
+			nodesCapacityData[node].TotalAvailableMemoryGiB = capacity.ReadableMem(nodesCapacityData[node].TotalAvailableMemory)
 		}
 
 		sortByRole, _ := cmd.Flags().GetBool("sort-by-role")

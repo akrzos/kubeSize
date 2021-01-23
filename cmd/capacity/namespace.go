@@ -97,6 +97,14 @@ var namespaceCmd = &cobra.Command{
 			}
 		}
 
+		// Populate "Human" readable capacity data values
+		for _, namespace := range namespaceNames {
+			namespaceCapacityData[namespace].TotalRequestsCPUCores = capacity.ReadableCPU(namespaceCapacityData[namespace].TotalRequestsCPU)
+			namespaceCapacityData[namespace].TotalLimitsCPUCores = capacity.ReadableCPU(namespaceCapacityData[namespace].TotalLimitsCPU)
+			namespaceCapacityData[namespace].TotalRequestsMemoryGiB = capacity.ReadableMem(namespaceCapacityData[namespace].TotalRequestsMemory)
+			namespaceCapacityData[namespace].TotalLimitsMemoryGiB = capacity.ReadableMem(namespaceCapacityData[namespace].TotalLimitsMemory)
+		}
+
 		sort.Strings(namespaceNames)
 
 		displayDefault, _ := cmd.Flags().GetBool("default-format")

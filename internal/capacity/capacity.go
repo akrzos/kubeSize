@@ -15,6 +15,8 @@ limitations under the License.
 */
 package capacity
 
+import "k8s.io/apimachinery/pkg/api/resource"
+
 func StringInSlice(a string, list []string) bool {
 	for _, b := range list {
 		if b == a {
@@ -22,4 +24,14 @@ func StringInSlice(a string, list []string) bool {
 		}
 	}
 	return false
+}
+
+func ReadableCPU(cpu resource.Quantity) float64 {
+	// Convert millicores to cores
+	return float64(cpu.MilliValue()) / 1000
+}
+
+func ReadableMem(mem resource.Quantity) float64 {
+	// Convert from KiB to GiB
+	return float64(mem.Value()) / 1024 / 1024 / 1024
 }

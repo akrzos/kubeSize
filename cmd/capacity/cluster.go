@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/akrzos/kubeSize/internal/capacity"
 	"github.com/akrzos/kubeSize/internal/kube"
 	"github.com/akrzos/kubeSize/internal/output"
 	"github.com/pkg/errors"
@@ -107,16 +108,16 @@ var clusterCmd = &cobra.Command{
 		clusterCapacityData.TotalAvailableMemory.Sub(clusterCapacityData.TotalRequestsMemory)
 
 		// Populate "Human" readable capacity data values
-		clusterCapacityData.TotalCapacityCPUCores = output.ReadableCPU(clusterCapacityData.TotalCapacityCPU)
-		clusterCapacityData.TotalCapacityMemoryGiB = output.ReadableMem(clusterCapacityData.TotalCapacityMemory)
-		clusterCapacityData.TotalAllocatableCPUCores = output.ReadableCPU(clusterCapacityData.TotalAllocatableCPU)
-		clusterCapacityData.TotalAllocatableMemoryGiB = output.ReadableMem(clusterCapacityData.TotalAllocatableMemory)
-		clusterCapacityData.TotalAvailableCPUCores = output.ReadableCPU(clusterCapacityData.TotalAvailableCPU)
-		clusterCapacityData.TotalAvailableMemoryGiB = output.ReadableMem(clusterCapacityData.TotalAvailableMemory)
-		clusterCapacityData.TotalRequestsCPUCores = output.ReadableCPU(clusterCapacityData.TotalRequestsCPU)
-		clusterCapacityData.TotalLimitsCPUCores = output.ReadableCPU(clusterCapacityData.TotalLimitsCPU)
-		clusterCapacityData.TotalRequestsMemoryGiB = output.ReadableMem(clusterCapacityData.TotalRequestsMemory)
-		clusterCapacityData.TotalLimitsMemoryGiB = output.ReadableMem(clusterCapacityData.TotalLimitsMemory)
+		clusterCapacityData.TotalCapacityCPUCores = capacity.ReadableCPU(clusterCapacityData.TotalCapacityCPU)
+		clusterCapacityData.TotalCapacityMemoryGiB = capacity.ReadableMem(clusterCapacityData.TotalCapacityMemory)
+		clusterCapacityData.TotalAllocatableCPUCores = capacity.ReadableCPU(clusterCapacityData.TotalAllocatableCPU)
+		clusterCapacityData.TotalAllocatableMemoryGiB = capacity.ReadableMem(clusterCapacityData.TotalAllocatableMemory)
+		clusterCapacityData.TotalAvailableCPUCores = capacity.ReadableCPU(clusterCapacityData.TotalAvailableCPU)
+		clusterCapacityData.TotalAvailableMemoryGiB = capacity.ReadableMem(clusterCapacityData.TotalAvailableMemory)
+		clusterCapacityData.TotalRequestsCPUCores = capacity.ReadableCPU(clusterCapacityData.TotalRequestsCPU)
+		clusterCapacityData.TotalLimitsCPUCores = capacity.ReadableCPU(clusterCapacityData.TotalLimitsCPU)
+		clusterCapacityData.TotalRequestsMemoryGiB = capacity.ReadableMem(clusterCapacityData.TotalRequestsMemory)
+		clusterCapacityData.TotalLimitsMemoryGiB = capacity.ReadableMem(clusterCapacityData.TotalLimitsMemory)
 
 		displayDefault, _ := cmd.Flags().GetBool("default-format")
 
