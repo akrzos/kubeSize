@@ -15,22 +15,15 @@ kubeSize is a kubernetes CLI plugin to easily aggregate sizing and capacity data
 If you have [krew](https://krew.sigs.k8s.io/) installed, you can install this plugin with the krew plugin yaml.
 
 ```console
-$ git clone https://github.com/akrzos/kubeSize.git
-Cloning into 'kubeSize'...
-remote: Enumerating objects: 256, done.
-remote: Counting objects: 100% (256/256), done.
-remote: Compressing objects: 100% (130/130), done.
-remote: Total 256 (delta 130), reused 203 (delta 85), pack-reused 0
-Receiving objects: 100% (256/256), 110.97 KiB | 3.83 MiB/s, done.
-Resolving deltas: 100% (130/130), done.
-$ kubectl krew install --manifest=kubeSize/deploy/krew/capacity.yaml
+$ kubectl krew install --manifest-url=https://raw.githubusercontent.com/akrzos/kubeSize/main/deploy/krew/capacity.yaml
+Updated the local copy of plugin index.
 Installing plugin: capacity
 Installed plugin: capacity
 \
  | Use this plugin:
- | 	kubectl capacity
+ |      kubectl capacity
  | Documentation:
- | 	https://github.com/akrzos/kubeSize
+ |      https://github.com/akrzos/kubeSize
 /
 $ kubectl capacity
 ```
