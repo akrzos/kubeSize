@@ -50,13 +50,19 @@ var namespaceCmd = &cobra.Command{
 
 		nsFlag, _ := cmd.Flags().GetString("namespace")
 		nsListOptions := metav1.ListOptions{}
+		podListOptions := metav1.ListOptions{}
 
 		if nsFlag != "" {
 			nsFieldSelector, err := fields.ParseSelector("metadata.name=" + nsFlag)
 			if err != nil {
 				return errors.Wrap(err, "failed to create fieldSelector")
 			}
+			podNamespaceFieldSelector, err := fields.ParseSelector("metadata.namespace=" + nsFlag)
+			if err != nil {
+				return errors.Wrap(err, "failed to create fieldSelector")
+			}
 			nsListOptions = metav1.ListOptions{FieldSelector: nsFieldSelector.String()}
+			podListOptions = metav1.ListOptions{FieldSelector: podNamespaceFieldSelector.String()}
 		}
 
 		namespaces, err := clientset.CoreV1().Namespaces().List(nsListOptions)
@@ -64,7 +70,7 @@ var namespaceCmd = &cobra.Command{
 			return errors.Wrap(err, "failed to list namespaces")
 		}
 
-		pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
+		pods, err := clientset.CoreV1().Pods("").List(podListOptions)
 		if err != nil {
 			return errors.Wrap(err, "failed to list pods")
 		}
