@@ -32,8 +32,8 @@ import (
 var clusterCmd = &cobra.Command{
 	Use:     "cluster",
 	Aliases: []string{"c"},
-	Short:   "Get cluster size and capacity",
-	Long:    `Get Kubernetes cluster size and capacity metrics`,
+	Short:   "Get cluster capacity data",
+	Long:    `Get metrics and data related to cluster capacity`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if err := output.ValidateOutput(*cmd); err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)

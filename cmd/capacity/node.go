@@ -35,7 +35,7 @@ var nodeCmd = &cobra.Command{
 	Use:     "node",
 	Aliases: []string{"no"},
 	Short:   "Get individual node capacity",
-	Long:    `Get individual node size and capacity metrics grouped by node role`,
+	Long:    `Get metrics and data related to node capacity`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if err := output.ValidateOutput(*cmd); err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)

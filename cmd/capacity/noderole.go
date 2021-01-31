@@ -34,8 +34,8 @@ import (
 var nodeRoleCmd = &cobra.Command{
 	Use:     "node-role",
 	Aliases: []string{"nr"},
-	Short:   "Get cluster capacity grouped by node role",
-	Long:    `Get Kubernetes cluster size and capacity metrics grouped by node role`,
+	Short:   "Get cluster capacity data grouped by node role",
+	Long:    `Get metrics and data related to cluster capacity grouped by node role`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if err := output.ValidateOutput(*cmd); err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
@@ -56,7 +56,7 @@ var nodeRoleCmd = &cobra.Command{
 
 		pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
 		if err != nil {
-			return errors.Wrap(err, "failed to list namespaces")
+			return errors.Wrap(err, "failed to list pods")
 		}
 
 		nodeRoleCapacityData := make(map[string]*output.ClusterCapacityData)

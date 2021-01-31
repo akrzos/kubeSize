@@ -34,7 +34,7 @@ var namespaceCmd = &cobra.Command{
 	Use:     "namespace",
 	Aliases: []string{"ns"},
 	Short:   "Get namespace size",
-	Long:    `Get namespace size and capacity metrics`,
+	Long:    `Get metrics related to the size of a namespace`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if err := output.ValidateOutput(*cmd); err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
