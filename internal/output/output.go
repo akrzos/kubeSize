@@ -78,6 +78,45 @@ type ClusterCapacityData struct {
 	TotalAvailableEphemeralStorageGB   float64
 }
 
+type ClusterSizeData struct {
+	// Cluster APIs
+	Namespace          int
+	Node               int
+	PersistentVolume   int
+	ServiceAccount     int
+	ClusterRole        int
+	ClusterRoleBinding int
+	Role               int
+	RoleBinding        int
+	ResourceQuota      int
+	NetworkPolicy      int
+	// Workloads APIs
+	Container         int
+	Pod               int
+	ReplicaSet        int
+	ReplicaController int
+	Deployment        int
+	Daemonset         int
+	StatefulSet       int
+	CronJob           int
+	Job               int
+	// Service APIs
+	EndPoints int
+	Service   int
+	Ingress   int
+	// Config And Storage APIs
+	Configmap             int
+	Secret                int
+	PersistentVolumeClaim int
+	StorageClass          int
+	VolumeAttachment      int
+	// Metadata APIs
+	Event               int
+	LimitRange          int
+	PodDisruptionBudget int
+	PodSecurityPolicy   int
+}
+
 type NodeCapacityData struct {
 	TotalPodCount                      int
 	TotalNonTermPodCount               int
@@ -207,6 +246,60 @@ func DisplayClusterData(clusterCapacityData ClusterCapacityData, displayDefault 
 			}
 			fmt.Fprintln(w, "")
 		}
+		w.Flush()
+	}
+}
+
+func DisplayClusterSizeData(clusterSizeData ClusterSizeData, displayHeaders bool, displayFormat string) {
+	switch displayFormat {
+	case jsonDisplay:
+		jsonClusterData, err := json.MarshalIndent(&clusterSizeData, "", "  ")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(string(jsonClusterData))
+	case yamlDisplay:
+		yamlClusterData, err := yaml.Marshal(clusterSizeData)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Print(string(yamlClusterData))
+	default:
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 0, 5, 1, ' ', 0)
+		if displayHeaders {
+			fmt.Fprintln(w, "CLUSTER APIs")
+			fmt.Fprintln(w, "Namespaces\tNodes\tPersistentVolumes\tServiceAccounts\tClusterRoles\tClusterRoleBindings\tRoles\tRoleBindings\tResourceQuotas\tNetworkPolicies")
+		}
+		fmt.Fprintf(w, "%d\t%d\t%d\t%d\t", clusterSizeData.Namespace, clusterSizeData.Node, clusterSizeData.PersistentVolume, clusterSizeData.ServiceAccount)
+		fmt.Fprintf(w, "%d\t%d\t%d\t%d\t", clusterSizeData.ClusterRole, clusterSizeData.ClusterRoleBinding, clusterSizeData.Role, clusterSizeData.RoleBinding)
+		fmt.Fprintf(w, "%d\t%d\n", clusterSizeData.ResourceQuota, clusterSizeData.NetworkPolicy)
+		if displayHeaders {
+			fmt.Fprintln(w, "WORKLOAD APIs")
+			fmt.Fprintln(w, "Containers\tPods\tReplicaSets\tReplicationControllers\tDeployments\tDaemonSets\tStatefulSets\tCronJobs\tJobs")
+		}
+		fmt.Fprintf(w, "%d\t%d\t%d\t%d\t", clusterSizeData.Container, clusterSizeData.Pod, clusterSizeData.ReplicaSet, clusterSizeData.ReplicaController)
+		fmt.Fprintf(w, "%d\t%d\t%d\t%d\t", clusterSizeData.Deployment, clusterSizeData.Daemonset, clusterSizeData.StatefulSet, clusterSizeData.CronJob)
+		fmt.Fprintf(w, "%d\n", clusterSizeData.Job)
+		if displayHeaders {
+			fmt.Fprintln(w, "SERVICE APIs")
+			fmt.Fprintln(w, "Endpoints\tIngresses\tServices")
+		}
+		fmt.Fprintf(w, "%d\t%d\t%d\n", clusterSizeData.EndPoints, clusterSizeData.Ingress, clusterSizeData.Service)
+		if displayHeaders {
+			fmt.Fprintln(w, "CONFIG And STORAGE APIs")
+			fmt.Fprintln(w, "ConfigMaps\tSecrets\tPersistentVolumeClaims\tStorageClasses\tVolumes\tVolumeAttachments")
+		}
+		fmt.Fprintf(w, "%d\t%d\t%d\t%d\t", clusterSizeData.Configmap, clusterSizeData.Secret, clusterSizeData.PersistentVolumeClaim, clusterSizeData.StorageClass)
+		fmt.Fprintf(w, "%d\t\n", clusterSizeData.VolumeAttachment)
+		if displayHeaders {
+			fmt.Fprintln(w, "METADATA APIs")
+			fmt.Fprintln(w, "Events\tLimitRanges\tPodDisruptionBudgets\tPodSecurityPolicies")
+		}
+		fmt.Fprintf(w, "%d\t%d\t%d\t%d\t\n", clusterSizeData.Event, clusterSizeData.LimitRange, clusterSizeData.PodDisruptionBudget, clusterSizeData.PodSecurityPolicy)
+
 		w.Flush()
 	}
 }
