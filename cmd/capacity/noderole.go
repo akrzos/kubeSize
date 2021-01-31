@@ -102,13 +102,13 @@ var nodeRoleCmd = &cobra.Command{
 			nodeRoles[node.Name] = roles.List()
 		}
 
-		nodeRoleCapacityData["unassigned"] = new(output.ClusterCapacityData)
-		nodeRoles["unassigned"] = []string{"unassigned"}
+		nodeRoleCapacityData["*unassigned*"] = new(output.ClusterCapacityData)
+		nodeRoles["*unassigned*"] = []string{"*unassigned*"}
 
 		for _, pod := range pods.Items {
 			podNode := pod.Spec.NodeName
 			if pod.Spec.NodeName == "" {
-				podNode = "unassigned"
+				podNode = "*unassigned*"
 			}
 			for _, role := range nodeRoles[podNode] {
 				nodeRoleCapacityData[role].TotalPodCount++
@@ -141,7 +141,7 @@ var nodeRoleCmd = &cobra.Command{
 
 		sort.Strings(roleNames)
 		if displayUnassigned, _ := cmd.Flags().GetBool("unassigned"); displayUnassigned {
-			roleNames = append(roleNames, "unassigned")
+			roleNames = append(roleNames, "*unassigned*")
 		}
 
 		// Populate "Human" readable capacity data values

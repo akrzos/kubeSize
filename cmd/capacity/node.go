@@ -102,12 +102,13 @@ var nodeCmd = &cobra.Command{
 				nodesByRole[role] = append(nodesByRole[role], node.Name)
 			}
 		}
-		nodesCapacityData["unassigned"] = new(output.NodeCapacityData)
+		nodesCapacityData["*unassigned*"] = new(output.NodeCapacityData)
+		nodesCapacityData["*total*"] = new(output.NodeCapacityData)
 
 		for _, pod := range pods.Items {
 			podNode := pod.Spec.NodeName
 			if pod.Spec.NodeName == "" {
-				podNode = "unassigned"
+				podNode = "*unassigned*"
 			}
 			nodesCapacityData[podNode].TotalPodCount++
 
@@ -138,11 +139,11 @@ var nodeCmd = &cobra.Command{
 
 		sort.Strings(nodeNames)
 		if displayUnassigned, _ := cmd.Flags().GetBool("unassigned"); displayUnassigned {
-			nodeNames = append(nodeNames, "unassigned")
-			nodesByRole["~"] = append(nodesByRole["~"], "unassigned")
+			nodeNames = append(nodeNames, "*unassigned*")
+			nodesByRole["~"] = append(nodesByRole["~"], "*unassigned*")
 		}
 
-		// Populate "Human" readable capacity data values
+		// Populate "Human" readable capacity data values and the *total* "node"
 		for _, node := range nodeNames {
 			nodesCapacityData[node].TotalCapacityCPUCores = capacity.ReadableCPU(nodesCapacityData[node].TotalCapacityCPU)
 			nodesCapacityData[node].TotalCapacityMemoryGiB = capacity.ReadableMem(nodesCapacityData[node].TotalCapacityMemory)
@@ -154,9 +155,41 @@ var nodeCmd = &cobra.Command{
 			nodesCapacityData[node].TotalRequestsMemoryGiB = capacity.ReadableMem(nodesCapacityData[node].TotalRequestsMemory)
 			nodesCapacityData[node].TotalLimitsMemoryGiB = capacity.ReadableMem(nodesCapacityData[node].TotalLimitsMemory)
 			nodesCapacityData[node].TotalAvailableMemoryGiB = capacity.ReadableMem(nodesCapacityData[node].TotalAvailableMemory)
+			nodesCapacityData["*total*"].TotalPodCount += nodesCapacityData[node].TotalPodCount
+			nodesCapacityData["*total*"].TotalNonTermPodCount += nodesCapacityData[node].TotalNonTermPodCount
+			nodesCapacityData["*total*"].TotalCapacityPods.Add(nodesCapacityData[node].TotalCapacityPods)
+			nodesCapacityData["*total*"].TotalCapacityCPU.Add(nodesCapacityData[node].TotalCapacityCPU)
+			nodesCapacityData["*total*"].TotalCapacityCPUCores += nodesCapacityData[node].TotalCapacityCPUCores
+			nodesCapacityData["*total*"].TotalCapacityMemory.Add(nodesCapacityData[node].TotalCapacityMemory)
+			nodesCapacityData["*total*"].TotalCapacityMemoryGiB += nodesCapacityData[node].TotalCapacityMemoryGiB
+			nodesCapacityData["*total*"].TotalAllocatablePods.Add(nodesCapacityData[node].TotalAllocatablePods)
+			nodesCapacityData["*total*"].TotalAllocatableCPU.Add(nodesCapacityData[node].TotalAllocatableCPU)
+			nodesCapacityData["*total*"].TotalAllocatableCPUCores += nodesCapacityData[node].TotalAllocatableCPUCores
+			nodesCapacityData["*total*"].TotalAllocatableMemory.Add(nodesCapacityData[node].TotalAllocatableMemory)
+			nodesCapacityData["*total*"].TotalAllocatableMemoryGiB += nodesCapacityData[node].TotalAllocatableMemoryGiB
+			nodesCapacityData["*total*"].TotalAvailablePods += nodesCapacityData[node].TotalAvailablePods
+			nodesCapacityData["*total*"].TotalRequestsCPU.Add(nodesCapacityData[node].TotalRequestsCPU)
+			nodesCapacityData["*total*"].TotalRequestsCPUCores += nodesCapacityData[node].TotalRequestsCPUCores
+			nodesCapacityData["*total*"].TotalLimitsCPU.Add(nodesCapacityData[node].TotalLimitsCPU)
+			nodesCapacityData["*total*"].TotalLimitsCPUCores += nodesCapacityData[node].TotalLimitsCPUCores
+			nodesCapacityData["*total*"].TotalAvailableCPU.Add(nodesCapacityData[node].TotalAvailableCPU)
+			nodesCapacityData["*total*"].TotalAvailableCPUCores += nodesCapacityData[node].TotalAvailableCPUCores
+			nodesCapacityData["*total*"].TotalRequestsMemory.Add(nodesCapacityData[node].TotalRequestsMemory)
+			nodesCapacityData["*total*"].TotalRequestsMemoryGiB += nodesCapacityData[node].TotalRequestsMemoryGiB
+			nodesCapacityData["*total*"].TotalLimitsMemory.Add(nodesCapacityData[node].TotalLimitsMemory)
+			nodesCapacityData["*total*"].TotalLimitsMemoryGiB += nodesCapacityData[node].TotalLimitsMemoryGiB
+			nodesCapacityData["*total*"].TotalAvailableMemory.Add(nodesCapacityData[node].TotalAvailableMemory)
+			nodesCapacityData["*total*"].TotalAvailableMemoryGiB += nodesCapacityData[node].TotalAvailableMemoryGiB
 		}
 
 		sortByRole, _ := cmd.Flags().GetBool("sort-by-role")
+
+		displayTotal, _ := cmd.Flags().GetBool("display-total")
+
+		if displayTotal {
+			nodeNames = append(nodeNames, "*total*")
+			nodesByRole["~"] = append(nodesByRole["~"], "*total*")
+		}
 
 		output.DisplayNodeData(nodesCapacityData, nodeNames, displayDefault, !displayNoHeaders, displayFormat, sortByRole, nodesByRole)
 
@@ -168,4 +201,5 @@ func init() {
 	rootCmd.AddCommand(nodeCmd)
 	nodeCmd.Flags().BoolP("unassigned", "u", false, "Include unassigned pod row, pods which do not have a node")
 	nodeCmd.Flags().BoolP("sort-by-role", "r", false, "Sort output by node-role")
+	nodeCmd.Flags().BoolP("display-total", "t", false, "Display sum of all node capacity data in table output")
 }

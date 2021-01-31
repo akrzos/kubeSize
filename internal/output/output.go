@@ -270,7 +270,7 @@ func DisplayNodeData(nodesCapacityData map[string]*NodeCapacityData, sortedNodeN
 
 func printNodeData(w *tabwriter.Writer, nodeName string, nodeData *NodeCapacityData, displayDefault bool) {
 	fmt.Fprintf(w, "%s\t", nodeName)
-	if nodeName != "unassigned" {
+	if nodeName != "*unassigned*" && nodeName != "*total*" {
 		if nodeData.Ready {
 			fmt.Fprint(w, "Ready")
 		} else {

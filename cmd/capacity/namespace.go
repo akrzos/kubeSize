@@ -103,12 +103,25 @@ var namespaceCmd = &cobra.Command{
 			}
 		}
 
-		// Populate "Human" readable capacity data values
+		namespaceCapacityData["*total*"] = new(output.NamespaceCapacityData)
+
+		// Populate "Human" readable capacity data values and the *total* "namespace"
 		for _, namespace := range namespaceNames {
 			namespaceCapacityData[namespace].TotalRequestsCPUCores = capacity.ReadableCPU(namespaceCapacityData[namespace].TotalRequestsCPU)
 			namespaceCapacityData[namespace].TotalLimitsCPUCores = capacity.ReadableCPU(namespaceCapacityData[namespace].TotalLimitsCPU)
 			namespaceCapacityData[namespace].TotalRequestsMemoryGiB = capacity.ReadableMem(namespaceCapacityData[namespace].TotalRequestsMemory)
 			namespaceCapacityData[namespace].TotalLimitsMemoryGiB = capacity.ReadableMem(namespaceCapacityData[namespace].TotalLimitsMemory)
+			namespaceCapacityData["*total*"].TotalPodCount += namespaceCapacityData[namespace].TotalPodCount
+			namespaceCapacityData["*total*"].TotalNonTermPodCount += namespaceCapacityData[namespace].TotalNonTermPodCount
+			namespaceCapacityData["*total*"].TotalUnassignedNodePodCount += namespaceCapacityData[namespace].TotalUnassignedNodePodCount
+			namespaceCapacityData["*total*"].TotalRequestsCPU.Add(namespaceCapacityData[namespace].TotalRequestsCPU)
+			namespaceCapacityData["*total*"].TotalRequestsCPUCores += namespaceCapacityData[namespace].TotalRequestsCPUCores
+			namespaceCapacityData["*total*"].TotalLimitsCPU.Add(namespaceCapacityData[namespace].TotalLimitsCPU)
+			namespaceCapacityData["*total*"].TotalLimitsCPUCores += namespaceCapacityData[namespace].TotalLimitsCPUCores
+			namespaceCapacityData["*total*"].TotalRequestsMemory.Add(namespaceCapacityData[namespace].TotalRequestsMemory)
+			namespaceCapacityData["*total*"].TotalRequestsMemoryGiB += namespaceCapacityData[namespace].TotalRequestsMemoryGiB
+			namespaceCapacityData["*total*"].TotalLimitsMemory.Add(namespaceCapacityData[namespace].TotalLimitsMemory)
+			namespaceCapacityData["*total*"].TotalLimitsMemoryGiB += namespaceCapacityData[namespace].TotalLimitsMemoryGiB
 		}
 
 		sort.Strings(namespaceNames)
@@ -121,6 +134,12 @@ var namespaceCmd = &cobra.Command{
 
 		displayAllNamespaces, _ := cmd.Flags().GetBool("all-namespaces")
 
+		displayTotal, _ := cmd.Flags().GetBool("display-total")
+
+		if displayTotal {
+			namespaceNames = append(namespaceNames, "*total*")
+		}
+
 		output.DisplayNamespaceData(namespaceCapacityData, namespaceNames, displayDefault, !displayNoHeaders, displayFormat, displayAllNamespaces)
 
 		return nil
@@ -130,4 +149,5 @@ var namespaceCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(namespaceCmd)
 	namespaceCmd.Flags().BoolP("all-namespaces", "A", false, "Include 0 pod namespaces in table output")
+	namespaceCmd.Flags().BoolP("display-total", "t", false, "Display sum of all namespace capacity data in table output")
 }
