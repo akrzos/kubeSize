@@ -5,12 +5,34 @@ kubeSize is a kubernetes CLI plugin to easily aggregate sizing and capacity data
 ## Table of Contents
 
 - [Install](#install)
+  - [Download](#download)
+  - [Krew](#krew)
+  - [Compile](#compile)
 - [Usage](#usage)
+  - [Cluster](#cluster)
+  - [Node-Role](#node-role)
+  - [Node](#node)
+  - [Namespace](#namespace)
+  - [Output formats](#output-formats)
 - [License](#license)
 
 ## Install
 
-### Krew install
+### Download
+
+Linux
+
+```console
+curl -L https://github.com/akrzos/kubeSize/releases/download/v0.1.2/kubeSize_0.1.2_Linux_x86_64.tar.gz | tar xvz - -C /usr/local/bin kubectl-capacity
+```
+
+Mac
+
+```console
+curl -L https://github.com/akrzos/kubeSize/releases/download/v0.1.2/kubeSize_0.1.2_macOS_x86_64.tar.gz | tar xvz - -C /usr/local/bin kubectl-capacity
+```
+
+### Krew
 
 If you have [krew](https://krew.sigs.k8s.io/) installed, you can install this plugin with the krew plugin yaml.
 
@@ -28,7 +50,7 @@ Installed plugin: capacity
 $ kubectl capacity
 ```
 
-### Compile and install
+### Compile
 
 If you have a golang environment setup, you can compile the plugin and manually install it.
 
@@ -55,12 +77,19 @@ $ kubectl capacity
 kubeSize is used as a kubectl plugin and run from the kubectl CLI.
 
 ```console
-$ kubectl capacity
+kubectl capacity
 ```
 
-Sub-commands aggregate cluster capacity data and display it for use. Flags can modify what data is collected or the format of the output.
+Sub-commands aggregate cluster capacity data and display it for use. All sub-commands have shortened aliases:
 
-### Cluster Capacity
+```console
+kubectl capacity c    # cluster
+kubectl capacity nr   # node-role
+kubectl capacity no   # node
+kubectl capacity ns   # namespace
+```
+
+### Cluster
 
 Aggregated cluster capacity data can easily be displayed with the `cluster` sub-command.
 
@@ -71,9 +100,9 @@ Total Ready Unready Unsch Capacity Allocatable Total Non-Term Avail Capacity    
 3     3     0       0     330      330         13    13       317   12.0        12.0        1.1      0.3    10.9  5.8          5.8         0.3      0.5    5.5
 ```
 
-### Node-Role Capacity
+### Node-Role
 
-Capacity data aggregated and grouped by node-role can be displayed with the `node-role` sub-command. This is helpful to see the available space to deploy an application on your kubernetes cluster by looking at the worker or compute node's available metrics (pods, cpu, memory).
+Capacity data aggregated and grouped by node-role can be displayed with the `node-role` sub-command. This is helpful to see the available space to deploy an application on your kubernetes cluster by looking at the worker/compute node-role available metrics (pods, cpu, memory).
 
 ```console
 $ kubectl capacity node-role
@@ -83,9 +112,11 @@ ROLE   NODES                     PODS                                      CPU (
 master 1     1     0       0     110      110         6     6        104   4.0         4.0         0.7      0.1    3.4   1.9          1.9         0.0      0.0    1.9
 ```
 
-Use the `--unassigned` or `-u` flag to include data on non-terminated pods that have not been assigned to a node that could be confused if looking at cluster level capacity data.
+Flags:
 
-### Node Capacity
+- `-u, --unassigned` flag includes a row of data on non-terminated pods that have not been assigned a node. Total counts could be confusing if looking at cluster level capacity data compared to node-role data if there are unassigned pods.
+
+### Node
 
 Individual node capacity data can be displayed with the `node` sub-command.
 
@@ -98,9 +129,13 @@ NAME                STATUS ROLES  PODS                                      CPU 
 3node-worker2       Ready  <none> 110      110         4     4        106   4.0         4.0         0.2      0.1    3.8   1.9          1.9         0.1      0.2    1.8
 ```
 
-Use the `--sort-by-role` or `-r` flag to sort by node-role rather than node name in the event your nodes are named randomly. Use the `--unassigned` or `-u` flag to include data on non-terminated pods that have not been assigned to a node that could be confused if looking at cluster level capacity data.
+Flags:
 
-### Namespace Capacity
+- `-r, --sort-by-role` flag sorts table output by node-role rather than node name.
+- `-t, --display-total` flag includes a row of data displaying totals for each column.
+- `-u, --unassigned` flag includes a row of data on non-terminated pods that have not been assigned a node. Total counts could be confusing if looking at cluster level capacity data compared to node data if there are unassigned pods.
+
+### Namespace
 
 Individual namespace capacity usage can be viewed with the `namespace` sub-command.
 
@@ -112,30 +147,32 @@ kube-system        12    12       0          1.1         0.3    0.3          0.5
 local-path-storage 1     1        0          0.0         0.0    0.0          0.0
 ```
 
-Use the `--all-namespaces` or `-A` to view all namespaces including those without any pods. Use the `--namespace` or `-n` flag to select a specific namespace.
+Flags:
 
-### Shortened command names
-
-All sub-commands have shortened aliases:
-
-```console
-$ kubectl capacity c    # cluster
-$ kubectl capacity nr   # node-role
-$ kubectl capacity no   # node
-$ kubectl capacity ns   # namespace
-```
+- `-A, --all-namespaces` flag includes namespaces with 0 pods.
+- `-n, --namespace string` flag selects a specific namespace.
+- `-t, --display-total` flag includes a row of data displaying totals for each column.
 
 ### Output formats
 
 kubeSize supports table, yaml, and json output formats. Table data is the default format and is designed to be read by humans. With table output, CPU metrics default to cores and Memory metrics into [GiB (gibibyte)](https://en.wikipedia.org/wiki/Byte#Multiple-byte_units).
 
-Use the output flag to change output formats:
+Flags:
+
+- `-o, --output string` flag allows selecting of `table|json|yaml` output formats.
+- `-d, --default-format` flag uses the default format of displaying resource quantities when in table format. (Json and Yaml already include this output format)
+
+Examples:
 
 ```console
 $ kubectl capacity c
 NODES                     PODS                                      CPU (cores)                                   MEMORY (GiB)
 Total Ready Unready Unsch Capacity Allocatable Total Non-Term Avail Capacity    Allocatable Requests Limits Avail Capacity     Allocatable Requests Limits Avail
 1     1     0       0     110      110         9     9        101   4.0         4.0         0.8      0.1    3.1   1.9          1.9         0.2      0.4    1.8
+$ kubectl capacity c -d
+NODES                     PODS                                      CPU                                        MEMORY
+Total Ready Unready Unsch Capacity Allocatable Total Non-Term Avail Capacity Allocatable Requests Limits Avail Capacity  Allocatable Requests Limits Avail
+1     1     0       0     110      110         9     9        101   4        4           850m     100m   3150m 2036452Ki 2036452Ki   190Mi    390Mi  1841892Ki
 $ kubectl capacity c -o yaml
 TotalAllocatableCPU: "4"
 TotalAllocatableCPUCores: 4
@@ -199,8 +236,6 @@ $ kubectl capacity c -o json
   "TotalAvailableMemoryGiB": 1.7565650939941406
 }
 ```
-
-Note that yaml and json formats automatically include the "human" Cores and GiB formats for each metric.
 
 ## License
 
