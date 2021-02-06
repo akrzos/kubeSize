@@ -1,0 +1,35 @@
+name: Integration Test
+
+on: push
+
+jobs:
+  kind-test:
+    name: integration test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: engineerd/setup-kind@v0.5.0
+
+    - name: Check kind cluster
+      run: |
+        kubectl cluster-info
+        kubectl get pods -n kube-system
+        echo "current-context:" $(kubectl config current-context)
+        echo "environment-kubeconfig:" ${KUBECONFIG}
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.15
+
+    - name: Build kubeSize
+      run: |
+        go build -o bin/kubectl-capacity github.com/akrzos/kubeSize/
+
+    - name: Run kubeSize commands
+      run: |
+        bin/kubectl-capacity c
+        bin/kubectl-capacity nr
+        bin/kubectl-capacity no
+        bin/kubectl-capacity ns
