@@ -23,7 +23,7 @@ kubeSize is a kubernetes CLI plugin to easily aggregate sizing and capacity data
 Linux
 
 ```console
-curl -L https://github.com/akrzos/kubeSize/releases/download/v0.1.2/kubeSize_0.1.2_Linux_x86_64.tar.gz | tar xvz - -C /usr/local/bin kubectl-capacity
+curl -L https://github.com/akrzos/kubeSize/releases/download/v0.1.2/kubeSize_0.1.2_Linux_x86_64.tar.gz | tar xvz -C /usr/local/bin kubectl-capacity
 ```
 
 Mac
