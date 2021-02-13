@@ -82,9 +82,11 @@ var clusterCmd = &cobra.Command{
 			clusterCapacityData.TotalCapacityPods.Add(*node.Status.Capacity.Pods())
 			clusterCapacityData.TotalCapacityCPU.Add(*node.Status.Capacity.Cpu())
 			clusterCapacityData.TotalCapacityMemory.Add(*node.Status.Capacity.Memory())
+			clusterCapacityData.TotalCapacityEphemeralStorage.Add(*node.Status.Capacity.StorageEphemeral())
 			clusterCapacityData.TotalAllocatablePods.Add(*node.Status.Allocatable.Pods())
 			clusterCapacityData.TotalAllocatableCPU.Add(*node.Status.Allocatable.Cpu())
 			clusterCapacityData.TotalAllocatableMemory.Add(*node.Status.Allocatable.Memory())
+			clusterCapacityData.TotalAllocatableEphemeralStorage.Add(*node.Status.Allocatable.StorageEphemeral())
 		}
 		clusterCapacityData.TotalUnreadyNodeCount = clusterCapacityData.TotalNodeCount - clusterCapacityData.TotalReadyNodeCount
 
@@ -97,6 +99,8 @@ var clusterCmd = &cobra.Command{
 				clusterCapacityData.TotalLimitsCPU.Add(*container.Resources.Limits.Cpu())
 				clusterCapacityData.TotalRequestsMemory.Add(*container.Resources.Requests.Memory())
 				clusterCapacityData.TotalLimitsMemory.Add(*container.Resources.Limits.Memory())
+				clusterCapacityData.TotalRequestsEphemeralStorage.Add(*container.Resources.Requests.StorageEphemeral())
+				clusterCapacityData.TotalLimitsEphemeralStorage.Add(*container.Resources.Limits.StorageEphemeral())
 			}
 		}
 
@@ -106,26 +110,35 @@ var clusterCmd = &cobra.Command{
 		clusterCapacityData.TotalAvailableCPU.Sub(clusterCapacityData.TotalRequestsCPU)
 		clusterCapacityData.TotalAvailableMemory = clusterCapacityData.TotalAllocatableMemory
 		clusterCapacityData.TotalAvailableMemory.Sub(clusterCapacityData.TotalRequestsMemory)
+		clusterCapacityData.TotalAvailableEphemeralStorage = clusterCapacityData.TotalAllocatableEphemeralStorage
+		clusterCapacityData.TotalAvailableEphemeralStorage.Sub(clusterCapacityData.TotalRequestsEphemeralStorage)
 
 		// Populate "Human" readable capacity data values
 		clusterCapacityData.TotalCapacityCPUCores = capacity.ReadableCPU(clusterCapacityData.TotalCapacityCPU)
 		clusterCapacityData.TotalCapacityMemoryGiB = capacity.ReadableMem(clusterCapacityData.TotalCapacityMemory)
+		clusterCapacityData.TotalCapacityEphemeralStorageGB = capacity.ReadableStorage(clusterCapacityData.TotalCapacityEphemeralStorage)
 		clusterCapacityData.TotalAllocatableCPUCores = capacity.ReadableCPU(clusterCapacityData.TotalAllocatableCPU)
 		clusterCapacityData.TotalAllocatableMemoryGiB = capacity.ReadableMem(clusterCapacityData.TotalAllocatableMemory)
+		clusterCapacityData.TotalAllocatableEphemeralStorageGB = capacity.ReadableStorage(clusterCapacityData.TotalAllocatableEphemeralStorage)
 		clusterCapacityData.TotalAvailableCPUCores = capacity.ReadableCPU(clusterCapacityData.TotalAvailableCPU)
 		clusterCapacityData.TotalAvailableMemoryGiB = capacity.ReadableMem(clusterCapacityData.TotalAvailableMemory)
+		clusterCapacityData.TotalAvailableEphemeralStorageGB = capacity.ReadableStorage(clusterCapacityData.TotalAvailableEphemeralStorage)
 		clusterCapacityData.TotalRequestsCPUCores = capacity.ReadableCPU(clusterCapacityData.TotalRequestsCPU)
 		clusterCapacityData.TotalLimitsCPUCores = capacity.ReadableCPU(clusterCapacityData.TotalLimitsCPU)
 		clusterCapacityData.TotalRequestsMemoryGiB = capacity.ReadableMem(clusterCapacityData.TotalRequestsMemory)
 		clusterCapacityData.TotalLimitsMemoryGiB = capacity.ReadableMem(clusterCapacityData.TotalLimitsMemory)
+		clusterCapacityData.TotalRequestsEphemeralStorageGB = capacity.ReadableStorage(clusterCapacityData.TotalRequestsEphemeralStorage)
+		clusterCapacityData.TotalLimitsEphemeralStorageGB = capacity.ReadableStorage(clusterCapacityData.TotalLimitsEphemeralStorage)
 
 		displayDefault, _ := cmd.Flags().GetBool("default-format")
+
+		displayEphemeralStorage, _ := cmd.Flags().GetBool("ephemeral-storage")
 
 		displayNoHeaders, _ := cmd.Flags().GetBool("no-headers")
 
 		displayFormat, _ := cmd.Flags().GetString("output")
 
-		output.DisplayClusterData(*clusterCapacityData, displayDefault, !displayNoHeaders, displayFormat)
+		output.DisplayClusterData(*clusterCapacityData, displayDefault, !displayNoHeaders, displayEphemeralStorage, displayFormat)
 
 		return nil
 	},
@@ -133,4 +146,5 @@ var clusterCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(clusterCmd)
+	clusterCmd.Flags().BoolP("ephemeral-storage", "e", false, "Display ephemeral storage")
 }

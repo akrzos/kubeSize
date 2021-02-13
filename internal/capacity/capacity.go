@@ -32,6 +32,11 @@ func ReadableCPU(cpu resource.Quantity) float64 {
 }
 
 func ReadableMem(mem resource.Quantity) float64 {
-	// Convert from KiB to GiB
+	// Convert from KiB to GiB (Gibibyte)
 	return float64(mem.Value()) / 1024 / 1024 / 1024
+}
+
+func ReadableStorage(storage resource.Quantity) float64 {
+	// Convert from KiB to GB (Gigabyte)
+	return float64(storage.Value()) / 1000 / 1000 / 1000
 }
