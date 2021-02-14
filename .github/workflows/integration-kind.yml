@@ -36,4 +36,5 @@ jobs:
         bin/kubectl-capacity nr
         bin/kubectl-capacity nr -e
         bin/kubectl-capacity no
+        bin/kubectl-capacity no -e
         bin/kubectl-capacity ns

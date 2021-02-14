@@ -95,9 +95,11 @@ var nodeCmd = &cobra.Command{
 			nodesCapacityData[node.Name].TotalCapacityPods.Add(*node.Status.Capacity.Pods())
 			nodesCapacityData[node.Name].TotalCapacityCPU.Add(*node.Status.Capacity.Cpu())
 			nodesCapacityData[node.Name].TotalCapacityMemory.Add(*node.Status.Capacity.Memory())
+			nodesCapacityData[node.Name].TotalCapacityEphemeralStorage.Add(*node.Status.Capacity.StorageEphemeral())
 			nodesCapacityData[node.Name].TotalAllocatablePods.Add(*node.Status.Allocatable.Pods())
 			nodesCapacityData[node.Name].TotalAllocatableCPU.Add(*node.Status.Allocatable.Cpu())
 			nodesCapacityData[node.Name].TotalAllocatableMemory.Add(*node.Status.Allocatable.Memory())
+			nodesCapacityData[node.Name].TotalAllocatableEphemeralStorage.Add(*node.Status.Allocatable.StorageEphemeral())
 			for _, role := range roles.List() {
 				nodesByRole[role] = append(nodesByRole[role], node.Name)
 			}
@@ -119,6 +121,8 @@ var nodeCmd = &cobra.Command{
 					nodesCapacityData[podNode].TotalLimitsCPU.Add(*container.Resources.Limits.Cpu())
 					nodesCapacityData[podNode].TotalRequestsMemory.Add(*container.Resources.Requests.Memory())
 					nodesCapacityData[podNode].TotalLimitsMemory.Add(*container.Resources.Limits.Memory())
+					nodesCapacityData[podNode].TotalRequestsEphemeralStorage.Add(*container.Resources.Requests.StorageEphemeral())
+					nodesCapacityData[podNode].TotalLimitsEphemeralStorage.Add(*container.Resources.Limits.StorageEphemeral())
 				}
 			}
 		}
@@ -129,9 +133,13 @@ var nodeCmd = &cobra.Command{
 			nodesCapacityData[node].TotalAvailableCPU.Sub(nodesCapacityData[node].TotalRequestsCPU)
 			nodesCapacityData[node].TotalAvailableMemory = nodesCapacityData[node].TotalAllocatableMemory
 			nodesCapacityData[node].TotalAvailableMemory.Sub(nodesCapacityData[node].TotalRequestsMemory)
+			nodesCapacityData[node].TotalAvailableEphemeralStorage = nodesCapacityData[node].TotalAllocatableEphemeralStorage
+			nodesCapacityData[node].TotalAvailableEphemeralStorage.Sub(nodesCapacityData[node].TotalRequestsEphemeralStorage)
 		}
 
 		displayDefault, _ := cmd.Flags().GetBool("default-format")
+
+		displayEphemeralStorage, _ := cmd.Flags().GetBool("ephemeral-storage")
 
 		displayNoHeaders, _ := cmd.Flags().GetBool("no-headers")
 
@@ -147,14 +155,19 @@ var nodeCmd = &cobra.Command{
 		for _, node := range nodeNames {
 			nodesCapacityData[node].TotalCapacityCPUCores = capacity.ReadableCPU(nodesCapacityData[node].TotalCapacityCPU)
 			nodesCapacityData[node].TotalCapacityMemoryGiB = capacity.ReadableMem(nodesCapacityData[node].TotalCapacityMemory)
+			nodesCapacityData[node].TotalCapacityEphemeralStorageGB = capacity.ReadableStorage(nodesCapacityData[node].TotalCapacityEphemeralStorage)
 			nodesCapacityData[node].TotalAllocatableCPUCores = capacity.ReadableCPU(nodesCapacityData[node].TotalAllocatableCPU)
 			nodesCapacityData[node].TotalAllocatableMemoryGiB = capacity.ReadableMem(nodesCapacityData[node].TotalAllocatableMemory)
+			nodesCapacityData[node].TotalAllocatableEphemeralStorageGB = capacity.ReadableStorage(nodesCapacityData[node].TotalAllocatableEphemeralStorage)
 			nodesCapacityData[node].TotalRequestsCPUCores = capacity.ReadableCPU(nodesCapacityData[node].TotalRequestsCPU)
 			nodesCapacityData[node].TotalLimitsCPUCores = capacity.ReadableCPU(nodesCapacityData[node].TotalLimitsCPU)
 			nodesCapacityData[node].TotalAvailableCPUCores = capacity.ReadableCPU(nodesCapacityData[node].TotalAvailableCPU)
 			nodesCapacityData[node].TotalRequestsMemoryGiB = capacity.ReadableMem(nodesCapacityData[node].TotalRequestsMemory)
 			nodesCapacityData[node].TotalLimitsMemoryGiB = capacity.ReadableMem(nodesCapacityData[node].TotalLimitsMemory)
 			nodesCapacityData[node].TotalAvailableMemoryGiB = capacity.ReadableMem(nodesCapacityData[node].TotalAvailableMemory)
+			nodesCapacityData[node].TotalRequestsEphemeralStorageGB = capacity.ReadableStorage(nodesCapacityData[node].TotalRequestsEphemeralStorage)
+			nodesCapacityData[node].TotalLimitsEphemeralStorageGB = capacity.ReadableStorage(nodesCapacityData[node].TotalLimitsEphemeralStorage)
+			nodesCapacityData[node].TotalAvailableEphemeralStorageGB = capacity.ReadableStorage(nodesCapacityData[node].TotalAvailableEphemeralStorage)
 			nodesCapacityData["*total*"].TotalPodCount += nodesCapacityData[node].TotalPodCount
 			nodesCapacityData["*total*"].TotalNonTermPodCount += nodesCapacityData[node].TotalNonTermPodCount
 			nodesCapacityData["*total*"].TotalCapacityPods.Add(nodesCapacityData[node].TotalCapacityPods)
@@ -162,11 +175,15 @@ var nodeCmd = &cobra.Command{
 			nodesCapacityData["*total*"].TotalCapacityCPUCores += nodesCapacityData[node].TotalCapacityCPUCores
 			nodesCapacityData["*total*"].TotalCapacityMemory.Add(nodesCapacityData[node].TotalCapacityMemory)
 			nodesCapacityData["*total*"].TotalCapacityMemoryGiB += nodesCapacityData[node].TotalCapacityMemoryGiB
+			nodesCapacityData["*total*"].TotalCapacityEphemeralStorage.Add(nodesCapacityData[node].TotalCapacityEphemeralStorage)
+			nodesCapacityData["*total*"].TotalCapacityEphemeralStorageGB += nodesCapacityData[node].TotalCapacityEphemeralStorageGB
 			nodesCapacityData["*total*"].TotalAllocatablePods.Add(nodesCapacityData[node].TotalAllocatablePods)
 			nodesCapacityData["*total*"].TotalAllocatableCPU.Add(nodesCapacityData[node].TotalAllocatableCPU)
 			nodesCapacityData["*total*"].TotalAllocatableCPUCores += nodesCapacityData[node].TotalAllocatableCPUCores
 			nodesCapacityData["*total*"].TotalAllocatableMemory.Add(nodesCapacityData[node].TotalAllocatableMemory)
 			nodesCapacityData["*total*"].TotalAllocatableMemoryGiB += nodesCapacityData[node].TotalAllocatableMemoryGiB
+			nodesCapacityData["*total*"].TotalAllocatableEphemeralStorage.Add(nodesCapacityData[node].TotalAllocatableEphemeralStorage)
+			nodesCapacityData["*total*"].TotalAllocatableEphemeralStorageGB += nodesCapacityData[node].TotalAllocatableEphemeralStorageGB
 			nodesCapacityData["*total*"].TotalAvailablePods += nodesCapacityData[node].TotalAvailablePods
 			nodesCapacityData["*total*"].TotalRequestsCPU.Add(nodesCapacityData[node].TotalRequestsCPU)
 			nodesCapacityData["*total*"].TotalRequestsCPUCores += nodesCapacityData[node].TotalRequestsCPUCores
@@ -180,6 +197,12 @@ var nodeCmd = &cobra.Command{
 			nodesCapacityData["*total*"].TotalLimitsMemoryGiB += nodesCapacityData[node].TotalLimitsMemoryGiB
 			nodesCapacityData["*total*"].TotalAvailableMemory.Add(nodesCapacityData[node].TotalAvailableMemory)
 			nodesCapacityData["*total*"].TotalAvailableMemoryGiB += nodesCapacityData[node].TotalAvailableMemoryGiB
+			nodesCapacityData["*total*"].TotalRequestsEphemeralStorage.Add(nodesCapacityData[node].TotalRequestsEphemeralStorage)
+			nodesCapacityData["*total*"].TotalRequestsEphemeralStorageGB += nodesCapacityData[node].TotalRequestsEphemeralStorageGB
+			nodesCapacityData["*total*"].TotalLimitsEphemeralStorage.Add(nodesCapacityData[node].TotalLimitsEphemeralStorage)
+			nodesCapacityData["*total*"].TotalLimitsEphemeralStorageGB += nodesCapacityData[node].TotalLimitsEphemeralStorageGB
+			nodesCapacityData["*total*"].TotalAvailableEphemeralStorage.Add(nodesCapacityData[node].TotalAvailableEphemeralStorage)
+			nodesCapacityData["*total*"].TotalAvailableEphemeralStorageGB += nodesCapacityData[node].TotalAvailableEphemeralStorageGB
 		}
 
 		sortByRole, _ := cmd.Flags().GetBool("sort-by-role")
@@ -191,7 +214,7 @@ var nodeCmd = &cobra.Command{
 			nodesByRole["~"] = append(nodesByRole["~"], "*total*")
 		}
 
-		output.DisplayNodeData(nodesCapacityData, nodeNames, displayDefault, !displayNoHeaders, displayFormat, sortByRole, nodesByRole)
+		output.DisplayNodeData(nodesCapacityData, nodeNames, displayDefault, !displayNoHeaders, displayEphemeralStorage, displayFormat, sortByRole, nodesByRole)
 
 		return nil
 	},
@@ -199,7 +222,8 @@ var nodeCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(nodeCmd)
-	nodeCmd.Flags().BoolP("unassigned", "u", false, "Include unassigned pod row, pods which do not have a node")
+	nodeCmd.Flags().BoolP("ephemeral-storage", "e", false, "Display ephemeral storage")
 	nodeCmd.Flags().BoolP("sort-by-role", "r", false, "Sort output by node-role")
 	nodeCmd.Flags().BoolP("display-total", "t", false, "Display sum of all node capacity data in table output")
+	nodeCmd.Flags().BoolP("unassigned", "u", false, "Include unassigned pod row, pods which do not have a node")
 }

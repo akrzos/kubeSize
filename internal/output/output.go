@@ -168,10 +168,9 @@ func DisplayClusterData(clusterCapacityData ClusterCapacityData, displayDefault 
 			}
 			fmt.Fprintf(w, "Total\tReady\tUnready\tUnsch\tCapacity\tAllocatable\tTotal\tNon-Term\tAvail\tCapacity\tAllocatable\tRequests\tLimits\tAvail\tCapacity\tAllocatable\tRequests\tLimits\tAvail\t")
 			if displayEphemeralStorage {
-				fmt.Fprintln(w, "Capacity\tAllocatable\tRequests\tLimits\tAvail")
-			} else {
-				fmt.Fprintln(w, "")
+				fmt.Fprintf(w, "Capacity\tAllocatable\tRequests\tLimits\tAvail")
 			}
+			fmt.Fprintln(w, "")
 		}
 		fmt.Fprintf(w, "%d\t%d\t%d\t%d\t", clusterCapacityData.TotalNodeCount, clusterCapacityData.TotalReadyNodeCount, clusterCapacityData.TotalUnreadyNodeCount, clusterCapacityData.TotalUnschedulableNodeCount)
 		fmt.Fprintf(w, "%s\t%s\t", &clusterCapacityData.TotalCapacityPods, &clusterCapacityData.TotalAllocatablePods)
@@ -183,24 +182,26 @@ func DisplayClusterData(clusterCapacityData ClusterCapacityData, displayDefault 
 			fmt.Fprintf(w, "%s\t", &clusterCapacityData.TotalAvailableCPU)
 			fmt.Fprintf(w, "%s\t%s\t", &clusterCapacityData.TotalCapacityMemory, &clusterCapacityData.TotalAllocatableMemory)
 			fmt.Fprintf(w, "%s\t%s\t", &clusterCapacityData.TotalRequestsMemory, &clusterCapacityData.TotalLimitsMemory)
+			fmt.Fprintf(w, "%s\t", &clusterCapacityData.TotalAvailableMemory)
 			if displayEphemeralStorage {
-				fmt.Fprintf(w, "%s\t%s\t%s\t", &clusterCapacityData.TotalAvailableMemory, &clusterCapacityData.TotalCapacityEphemeralStorage, &clusterCapacityData.TotalAllocatableEphemeralStorage)
-				fmt.Fprintf(w, "%s\t%s\t%s\t\n", &clusterCapacityData.TotalRequestsEphemeralStorage, &clusterCapacityData.TotalLimitsEphemeralStorage, &clusterCapacityData.TotalAvailableEphemeralStorage)
-			} else {
-				fmt.Fprintf(w, "%s\t\n", &clusterCapacityData.TotalAvailableMemory)
+				fmt.Fprintf(w, "%s\t%s\t", &clusterCapacityData.TotalCapacityEphemeralStorage, &clusterCapacityData.TotalAllocatableEphemeralStorage)
+				fmt.Fprintf(w, "%s\t%s\t", &clusterCapacityData.TotalRequestsEphemeralStorage, &clusterCapacityData.TotalLimitsEphemeralStorage)
+				fmt.Fprintf(w, "%s\t", &clusterCapacityData.TotalAvailableEphemeralStorage)
 			}
+			fmt.Fprintln(w, "")
 		} else {
 			fmt.Fprintf(w, "%.1f\t%.1f\t", clusterCapacityData.TotalCapacityCPUCores, clusterCapacityData.TotalAllocatableCPUCores)
 			fmt.Fprintf(w, "%.1f\t%.1f\t", clusterCapacityData.TotalRequestsCPUCores, clusterCapacityData.TotalLimitsCPUCores)
 			fmt.Fprintf(w, "%.1f\t", clusterCapacityData.TotalAvailableCPUCores)
 			fmt.Fprintf(w, "%.1f\t%.1f\t", clusterCapacityData.TotalCapacityMemoryGiB, clusterCapacityData.TotalAllocatableMemoryGiB)
 			fmt.Fprintf(w, "%.1f\t%.1f\t", clusterCapacityData.TotalRequestsMemoryGiB, clusterCapacityData.TotalLimitsMemoryGiB)
+			fmt.Fprintf(w, "%.1f\t", clusterCapacityData.TotalAvailableMemoryGiB)
 			if displayEphemeralStorage {
-				fmt.Fprintf(w, "%.1f\t%.1f\t%.1f\t", clusterCapacityData.TotalAvailableMemoryGiB, clusterCapacityData.TotalCapacityEphemeralStorageGB, clusterCapacityData.TotalAllocatableEphemeralStorageGB)
-				fmt.Fprintf(w, "%.1f\t%.1f\t%.1f\t\n", clusterCapacityData.TotalRequestsEphemeralStorageGB, clusterCapacityData.TotalLimitsEphemeralStorageGB, clusterCapacityData.TotalAvailableEphemeralStorageGB)
-			} else {
-				fmt.Fprintf(w, "%.1f\t\n", clusterCapacityData.TotalAvailableMemoryGiB)
+				fmt.Fprintf(w, "%.1f\t%.1f\t", clusterCapacityData.TotalCapacityEphemeralStorageGB, clusterCapacityData.TotalAllocatableEphemeralStorageGB)
+				fmt.Fprintf(w, "%.1f\t%.1f\t", clusterCapacityData.TotalRequestsEphemeralStorageGB, clusterCapacityData.TotalLimitsEphemeralStorageGB)
+				fmt.Fprintf(w, "%.1f\t", clusterCapacityData.TotalAvailableEphemeralStorageGB)
 			}
+			fmt.Fprintln(w, "")
 		}
 		w.Flush()
 	}
@@ -241,10 +242,9 @@ func DisplayNodeRoleData(nodeRoleCapacityData map[string]*ClusterCapacityData, s
 			}
 			fmt.Fprintf(w, "\tTotal\tReady\tUnready\tUnsch\tCapacity\tAllocatable\tTotal\tNon-Term\tAvail\tCapacity\tAllocatable\tRequests\tLimits\tAvail\tCapacity\tAllocatable\tRequests\tLimits\tAvail\t")
 			if displayEphemeralStorage {
-				fmt.Fprintln(w, "Capacity\tAllocatable\tRequests\tLimits\tAvail")
-			} else {
-				fmt.Fprintln(w, "")
+				fmt.Fprintf(w, "Capacity\tAllocatable\tRequests\tLimits\tAvail")
 			}
+			fmt.Fprintln(w, "")
 		}
 		for _, k := range sortedRoleNames {
 			fmt.Fprintf(w, "%s\t", k)
@@ -258,31 +258,33 @@ func DisplayNodeRoleData(nodeRoleCapacityData map[string]*ClusterCapacityData, s
 				fmt.Fprintf(w, "%s\t", &nodeRoleCapacityData[k].TotalAvailableCPU)
 				fmt.Fprintf(w, "%s\t%s\t", &nodeRoleCapacityData[k].TotalCapacityMemory, &nodeRoleCapacityData[k].TotalAllocatableMemory)
 				fmt.Fprintf(w, "%s\t%s\t", &nodeRoleCapacityData[k].TotalRequestsMemory, &nodeRoleCapacityData[k].TotalLimitsMemory)
+				fmt.Fprintf(w, "%s\t", &nodeRoleCapacityData[k].TotalAvailableMemory)
 				if displayEphemeralStorage {
-					fmt.Fprintf(w, "%s\t%s\t%s\t", &nodeRoleCapacityData[k].TotalAvailableMemory, &nodeRoleCapacityData[k].TotalCapacityEphemeralStorage, &nodeRoleCapacityData[k].TotalAllocatableEphemeralStorage)
-					fmt.Fprintf(w, "%s\t%s\t%s\t\n", &nodeRoleCapacityData[k].TotalRequestsEphemeralStorage, &nodeRoleCapacityData[k].TotalLimitsEphemeralStorage, &nodeRoleCapacityData[k].TotalAvailableEphemeralStorage)
-				} else {
-					fmt.Fprintf(w, "%s\t\n", &nodeRoleCapacityData[k].TotalAvailableMemory)
+					fmt.Fprintf(w, "%s\t%s\t", &nodeRoleCapacityData[k].TotalCapacityEphemeralStorage, &nodeRoleCapacityData[k].TotalAllocatableEphemeralStorage)
+					fmt.Fprintf(w, "%s\t%s\t", &nodeRoleCapacityData[k].TotalRequestsEphemeralStorage, &nodeRoleCapacityData[k].TotalLimitsEphemeralStorage)
+					fmt.Fprintf(w, "%s\t", &nodeRoleCapacityData[k].TotalAvailableEphemeralStorage)
 				}
+				fmt.Fprintln(w, "")
 			} else {
 				fmt.Fprintf(w, "%.1f\t%.1f\t", nodeRoleCapacityData[k].TotalCapacityCPUCores, nodeRoleCapacityData[k].TotalAllocatableCPUCores)
 				fmt.Fprintf(w, "%.1f\t%.1f\t", nodeRoleCapacityData[k].TotalRequestsCPUCores, nodeRoleCapacityData[k].TotalLimitsCPUCores)
 				fmt.Fprintf(w, "%.1f\t", nodeRoleCapacityData[k].TotalAvailableCPUCores)
 				fmt.Fprintf(w, "%.1f\t%.1f\t", nodeRoleCapacityData[k].TotalCapacityMemoryGiB, nodeRoleCapacityData[k].TotalAllocatableMemoryGiB)
 				fmt.Fprintf(w, "%.1f\t%.1f\t", nodeRoleCapacityData[k].TotalRequestsMemoryGiB, nodeRoleCapacityData[k].TotalLimitsMemoryGiB)
+				fmt.Fprintf(w, "%.1f\t", nodeRoleCapacityData[k].TotalAvailableMemoryGiB)
 				if displayEphemeralStorage {
-					fmt.Fprintf(w, "%.1f\t%.1f\t%.1f\t", nodeRoleCapacityData[k].TotalAvailableMemoryGiB, nodeRoleCapacityData[k].TotalCapacityEphemeralStorageGB, nodeRoleCapacityData[k].TotalAllocatableEphemeralStorageGB)
-					fmt.Fprintf(w, "%.1f\t%.1f\t%.1f\t\n", nodeRoleCapacityData[k].TotalRequestsEphemeralStorageGB, nodeRoleCapacityData[k].TotalLimitsEphemeralStorageGB, nodeRoleCapacityData[k].TotalAvailableEphemeralStorageGB)
-				} else {
-					fmt.Fprintf(w, "%.1f\t\n", nodeRoleCapacityData[k].TotalAvailableMemoryGiB)
+					fmt.Fprintf(w, "%.1f\t%.1f\t", nodeRoleCapacityData[k].TotalCapacityEphemeralStorageGB, nodeRoleCapacityData[k].TotalAllocatableEphemeralStorageGB)
+					fmt.Fprintf(w, "%.1f\t%.1f\t", nodeRoleCapacityData[k].TotalRequestsEphemeralStorageGB, nodeRoleCapacityData[k].TotalLimitsEphemeralStorageGB)
+					fmt.Fprintf(w, "%.1f\t", nodeRoleCapacityData[k].TotalAvailableEphemeralStorageGB)
 				}
+				fmt.Fprintln(w, "")
 			}
 		}
 		w.Flush()
 	}
 }
 
-func DisplayNodeData(nodesCapacityData map[string]*NodeCapacityData, sortedNodeNames []string, displayDefault bool, displayHeaders bool, displayFormat string, sortByRole bool, nodesByRole map[string][]string) {
+func DisplayNodeData(nodesCapacityData map[string]*NodeCapacityData, sortedNodeNames []string, displayDefault bool, displayHeaders bool, displayEphemeralStorage bool, displayFormat string, sortByRole bool, nodesByRole map[string][]string) {
 	switch displayFormat {
 	case jsonDisplay:
 		jsonNodeData, err := json.MarshalIndent(&nodesCapacityData, "", "  ")
@@ -303,11 +305,23 @@ func DisplayNodeData(nodesCapacityData map[string]*NodeCapacityData, sortedNodeN
 		w.Init(os.Stdout, 0, 5, 1, ' ', 0)
 		if displayHeaders {
 			if displayDefault {
-				fmt.Fprintln(w, "NAME\tSTATUS\tROLES\tPODS\t\t\t\t\tCPU\t\t\t\t\tMEMORY\t\t\t")
+				fmt.Fprintf(w, "NAME\tSTATUS\tROLES\tPODS\t\t\t\t\tCPU\t\t\t\t\tMEMORY\t\t\t\t\t")
+				if displayEphemeralStorage {
+					fmt.Fprintf(w, "EPHEMERAL STORAGE")
+				}
+				fmt.Fprintln(w, "")
 			} else {
-				fmt.Fprintln(w, "NAME\tSTATUS\tROLES\tPODS\t\t\t\t\tCPU (cores)\t\t\t\t\tMEMORY (GiB)\t\t\t")
+				fmt.Fprintf(w, "NAME\tSTATUS\tROLES\tPODS\t\t\t\t\tCPU (cores)\t\t\t\t\tMEMORY (GiB)\t\t\t\t\t")
+				if displayEphemeralStorage {
+					fmt.Fprintf(w, "EPHEMERAL STORAGE (GB)")
+				}
+				fmt.Fprintln(w, "")
 			}
-			fmt.Fprintln(w, "\t\t\tCapacity\tAllocatable\tTotal\tNon-Term\tAvail\tCapacity\tAllocatable\tRequests\tLimits\tAvail\tCapacity\tAllocatable\tRequests\tLimits\tAvail")
+			fmt.Fprintf(w, "\t\t\tCapacity\tAllocatable\tTotal\tNon-Term\tAvail\tCapacity\tAllocatable\tRequests\tLimits\tAvail\tCapacity\tAllocatable\tRequests\tLimits\tAvail\t")
+			if displayEphemeralStorage {
+				fmt.Fprintf(w, "Capacity\tAllocatable\tRequests\tLimits\tAvail")
+			}
+			fmt.Fprintln(w, "")
 		}
 
 		if sortByRole {
@@ -320,13 +334,13 @@ func DisplayNodeData(nodesCapacityData map[string]*NodeCapacityData, sortedNodeN
 
 			for _, role := range roles {
 				for _, node := range nodesByRole[role] {
-					printNodeData(w, node, nodesCapacityData[node], displayDefault)
+					printNodeData(w, node, nodesCapacityData[node], displayDefault, displayEphemeralStorage)
 				}
 			}
 		} else {
 			// Sort by Node Name
 			for _, k := range sortedNodeNames {
-				printNodeData(w, k, nodesCapacityData[k], displayDefault)
+				printNodeData(w, k, nodesCapacityData[k], displayDefault, displayEphemeralStorage)
 			}
 		}
 
@@ -334,7 +348,7 @@ func DisplayNodeData(nodesCapacityData map[string]*NodeCapacityData, sortedNodeN
 	}
 }
 
-func printNodeData(w *tabwriter.Writer, nodeName string, nodeData *NodeCapacityData, displayDefault bool) {
+func printNodeData(w *tabwriter.Writer, nodeName string, nodeData *NodeCapacityData, displayDefault bool, displayEphemeralStorage bool) {
 	fmt.Fprintf(w, "%s\t", nodeName)
 	if nodeName != "*unassigned*" && nodeName != "*total*" {
 		if nodeData.Ready {
@@ -357,14 +371,26 @@ func printNodeData(w *tabwriter.Writer, nodeName string, nodeData *NodeCapacityD
 		fmt.Fprintf(w, "%s\t", &nodeData.TotalAvailableCPU)
 		fmt.Fprintf(w, "%s\t%s\t", &nodeData.TotalCapacityMemory, &nodeData.TotalAllocatableMemory)
 		fmt.Fprintf(w, "%s\t%s\t", &nodeData.TotalRequestsMemory, &nodeData.TotalLimitsMemory)
-		fmt.Fprintf(w, "%s\t\n", &nodeData.TotalAvailableMemory)
+		fmt.Fprintf(w, "%s\t", &nodeData.TotalAvailableMemory)
+		if displayEphemeralStorage {
+			fmt.Fprintf(w, "%s\t%s\t", &nodeData.TotalCapacityEphemeralStorage, &nodeData.TotalAllocatableEphemeralStorage)
+			fmt.Fprintf(w, "%s\t%s\t", &nodeData.TotalRequestsEphemeralStorage, &nodeData.TotalLimitsEphemeralStorage)
+			fmt.Fprintf(w, "%s\t", &nodeData.TotalAvailableEphemeralStorage)
+		}
+		fmt.Fprintln(w, "")
 	} else {
 		fmt.Fprintf(w, "%.1f\t%.1f\t", nodeData.TotalCapacityCPUCores, nodeData.TotalAllocatableCPUCores)
 		fmt.Fprintf(w, "%.1f\t%.1f\t", nodeData.TotalRequestsCPUCores, nodeData.TotalLimitsCPUCores)
 		fmt.Fprintf(w, "%.1f\t", nodeData.TotalAvailableCPUCores)
 		fmt.Fprintf(w, "%.1f\t%.1f\t", nodeData.TotalCapacityMemoryGiB, nodeData.TotalAllocatableMemoryGiB)
 		fmt.Fprintf(w, "%.1f\t%.1f\t", nodeData.TotalRequestsMemoryGiB, nodeData.TotalLimitsMemoryGiB)
-		fmt.Fprintf(w, "%.1f\t\n", nodeData.TotalAvailableMemoryGiB)
+		fmt.Fprintf(w, "%.1f\t", nodeData.TotalAvailableMemoryGiB)
+		if displayEphemeralStorage {
+			fmt.Fprintf(w, "%.1f\t%.1f\t", nodeData.TotalCapacityEphemeralStorageGB, nodeData.TotalAllocatableEphemeralStorageGB)
+			fmt.Fprintf(w, "%.1f\t%.1f\t", nodeData.TotalRequestsEphemeralStorageGB, nodeData.TotalLimitsEphemeralStorageGB)
+			fmt.Fprintf(w, "%.1f\t", nodeData.TotalAvailableEphemeralStorageGB)
+		}
+		fmt.Fprintln(w, "")
 	}
 }
 
