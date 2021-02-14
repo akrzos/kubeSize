@@ -3,7 +3,7 @@ kind: Plugin
 metadata:
   name: capacity
 spec:
-  version: "v0.1.2"
+  version: "v0.1.3"
   homepage: https://github.com/akrzos/kubeSize
   shortDescription: "Get cluster size and capacity"
   description: |
@@ -13,20 +13,20 @@ spec:
       matchLabels:
         os: darwin
         arch: amd64
-    uri: https://github.com/akrzos/kubeSize/releases/download/v0.1.2/kubeSize_0.1.2_macOS_x86_64.tar.gz
-    sha256: afb8853d1113f80343bc35aea99637a851e99dda121fb45ad351c5d1040dee5b
+    uri: https://github.com/akrzos/kubeSize/releases/download/v0.1.3/kubeSize_0.1.3_macOS_x86_64.tar.gz
+    sha256: 390b4c07af6a5a4252223fb4ff9ce073672f0a303cdab1502dea1bb34dd7dbba
     bin: kubectl-capacity
   - selector:
       matchLabels:
         os: linux
         arch: amd64
-    uri: https://github.com/akrzos/kubeSize/releases/download/v0.1.2/kubeSize_0.1.2_Linux_x86_64.tar.gz
-    sha256: d1e680f66c66ca7f9664bf2efcdcdf4e9580b565de45152c2cba2f208b457df6
+    uri: https://github.com/akrzos/kubeSize/releases/download/v0.1.3/kubeSize_0.1.3_Linux_x86_64.tar.gz
+    sha256: 200886b4dbe6331ea876bf3f6f835a1890fb647939df5c10223154d8f17b54d3
     bin: kubectl-capacity
   - selector:
       matchLabels:
         os: windows
         arch: amd64
-    uri: https://github.com/akrzos/kubeSize/releases/download/v0.1.2/kubeSize_0.1.2_Windows_x86_64.tar.gz
-    sha256: 743c86196b826e63cdc44bd05709ba93538637b0a5698ca481bdcc90bf8daaae
+    uri: https://github.com/akrzos/kubeSize/releases/download/v0.1.3/kubeSize_0.1.3_Windows_x86_64.tar.gz
+    sha256: 91f0c425042882bfdafa72fab28dc8c4c0e276307fa3bb3ea9730bcde70ad02e
     bin: kubectl-capacity.exe
