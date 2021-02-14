@@ -95,9 +95,11 @@ var nodeRoleCmd = &cobra.Command{
 				nodeRoleCapacityData[role].TotalCapacityPods.Add(*node.Status.Capacity.Pods())
 				nodeRoleCapacityData[role].TotalCapacityCPU.Add(*node.Status.Capacity.Cpu())
 				nodeRoleCapacityData[role].TotalCapacityMemory.Add(*node.Status.Capacity.Memory())
+				nodeRoleCapacityData[role].TotalCapacityEphemeralStorage.Add(*node.Status.Capacity.StorageEphemeral())
 				nodeRoleCapacityData[role].TotalAllocatablePods.Add(*node.Status.Allocatable.Pods())
 				nodeRoleCapacityData[role].TotalAllocatableCPU.Add(*node.Status.Allocatable.Cpu())
 				nodeRoleCapacityData[role].TotalAllocatableMemory.Add(*node.Status.Allocatable.Memory())
+				nodeRoleCapacityData[role].TotalAllocatableEphemeralStorage.Add(*node.Status.Allocatable.StorageEphemeral())
 			}
 			nodeRoles[node.Name] = roles.List()
 		}
@@ -119,6 +121,8 @@ var nodeRoleCmd = &cobra.Command{
 						nodeRoleCapacityData[role].TotalLimitsCPU.Add(*container.Resources.Limits.Cpu())
 						nodeRoleCapacityData[role].TotalRequestsMemory.Add(*container.Resources.Requests.Memory())
 						nodeRoleCapacityData[role].TotalLimitsMemory.Add(*container.Resources.Limits.Memory())
+						nodeRoleCapacityData[role].TotalRequestsEphemeralStorage.Add(*container.Resources.Requests.StorageEphemeral())
+						nodeRoleCapacityData[role].TotalLimitsEphemeralStorage.Add(*container.Resources.Limits.StorageEphemeral())
 					}
 				}
 			}
@@ -131,9 +135,13 @@ var nodeRoleCmd = &cobra.Command{
 			nodeRoleCapacityData[role].TotalAvailableCPU.Sub(nodeRoleCapacityData[role].TotalRequestsCPU)
 			nodeRoleCapacityData[role].TotalAvailableMemory = nodeRoleCapacityData[role].TotalAllocatableMemory
 			nodeRoleCapacityData[role].TotalAvailableMemory.Sub(nodeRoleCapacityData[role].TotalRequestsMemory)
+			nodeRoleCapacityData[role].TotalAvailableEphemeralStorage = nodeRoleCapacityData[role].TotalAllocatableEphemeralStorage
+			nodeRoleCapacityData[role].TotalAvailableEphemeralStorage.Sub(nodeRoleCapacityData[role].TotalRequestsEphemeralStorage)
 		}
 
 		displayDefault, _ := cmd.Flags().GetBool("default-format")
+
+		displayEphemeralStorage, _ := cmd.Flags().GetBool("ephemeral-storage")
 
 		displayNoHeaders, _ := cmd.Flags().GetBool("no-headers")
 
@@ -148,17 +156,22 @@ var nodeRoleCmd = &cobra.Command{
 		for _, role := range roleNames {
 			nodeRoleCapacityData[role].TotalCapacityCPUCores = capacity.ReadableCPU(nodeRoleCapacityData[role].TotalCapacityCPU)
 			nodeRoleCapacityData[role].TotalCapacityMemoryGiB = capacity.ReadableMem(nodeRoleCapacityData[role].TotalCapacityMemory)
+			nodeRoleCapacityData[role].TotalCapacityEphemeralStorageGB = capacity.ReadableStorage(nodeRoleCapacityData[role].TotalCapacityEphemeralStorage)
 			nodeRoleCapacityData[role].TotalAllocatableCPUCores = capacity.ReadableCPU(nodeRoleCapacityData[role].TotalAllocatableCPU)
 			nodeRoleCapacityData[role].TotalAllocatableMemoryGiB = capacity.ReadableMem(nodeRoleCapacityData[role].TotalAllocatableMemory)
+			nodeRoleCapacityData[role].TotalAllocatableEphemeralStorageGB = capacity.ReadableStorage(nodeRoleCapacityData[role].TotalAllocatableEphemeralStorage)
 			nodeRoleCapacityData[role].TotalRequestsCPUCores = capacity.ReadableCPU(nodeRoleCapacityData[role].TotalRequestsCPU)
 			nodeRoleCapacityData[role].TotalLimitsCPUCores = capacity.ReadableCPU(nodeRoleCapacityData[role].TotalLimitsCPU)
 			nodeRoleCapacityData[role].TotalAvailableCPUCores = capacity.ReadableCPU(nodeRoleCapacityData[role].TotalAvailableCPU)
 			nodeRoleCapacityData[role].TotalRequestsMemoryGiB = capacity.ReadableMem(nodeRoleCapacityData[role].TotalRequestsMemory)
 			nodeRoleCapacityData[role].TotalLimitsMemoryGiB = capacity.ReadableMem(nodeRoleCapacityData[role].TotalLimitsMemory)
 			nodeRoleCapacityData[role].TotalAvailableMemoryGiB = capacity.ReadableMem(nodeRoleCapacityData[role].TotalAvailableMemory)
+			nodeRoleCapacityData[role].TotalRequestsEphemeralStorageGB = capacity.ReadableStorage(nodeRoleCapacityData[role].TotalRequestsEphemeralStorage)
+			nodeRoleCapacityData[role].TotalLimitsEphemeralStorageGB = capacity.ReadableStorage(nodeRoleCapacityData[role].TotalLimitsEphemeralStorage)
+			nodeRoleCapacityData[role].TotalAvailableEphemeralStorageGB = capacity.ReadableStorage(nodeRoleCapacityData[role].TotalAvailableEphemeralStorage)
 		}
 
-		output.DisplayNodeRoleData(nodeRoleCapacityData, roleNames, displayDefault, !displayNoHeaders, displayFormat)
+		output.DisplayNodeRoleData(nodeRoleCapacityData, roleNames, displayDefault, !displayNoHeaders, displayEphemeralStorage, displayFormat)
 
 		return nil
 	},
@@ -166,5 +179,6 @@ var nodeRoleCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(nodeRoleCmd)
+	nodeRoleCmd.Flags().BoolP("ephemeral-storage", "e", false, "Display ephemeral storage")
 	nodeRoleCmd.Flags().BoolP("unassigned", "u", false, "Include unassigned pod row, pods which do not have a node")
 }

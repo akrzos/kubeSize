@@ -79,34 +79,44 @@ type ClusterCapacityData struct {
 }
 
 type NodeCapacityData struct {
-	TotalPodCount             int
-	TotalNonTermPodCount      int
-	Roles                     sets.String
-	Ready                     bool
-	Schedulable               bool
-	TotalCapacityPods         resource.Quantity
-	TotalCapacityCPU          resource.Quantity
-	TotalCapacityCPUCores     float64
-	TotalCapacityMemory       resource.Quantity
-	TotalCapacityMemoryGiB    float64
-	TotalAllocatablePods      resource.Quantity
-	TotalAllocatableCPU       resource.Quantity
-	TotalAllocatableCPUCores  float64
-	TotalAllocatableMemory    resource.Quantity
-	TotalAllocatableMemoryGiB float64
-	TotalAvailablePods        int
-	TotalRequestsCPU          resource.Quantity
-	TotalRequestsCPUCores     float64
-	TotalLimitsCPU            resource.Quantity
-	TotalLimitsCPUCores       float64
-	TotalAvailableCPU         resource.Quantity
-	TotalAvailableCPUCores    float64
-	TotalRequestsMemory       resource.Quantity
-	TotalRequestsMemoryGiB    float64
-	TotalLimitsMemory         resource.Quantity
-	TotalLimitsMemoryGiB      float64
-	TotalAvailableMemory      resource.Quantity
-	TotalAvailableMemoryGiB   float64
+	TotalPodCount                      int
+	TotalNonTermPodCount               int
+	Roles                              sets.String
+	Ready                              bool
+	Schedulable                        bool
+	TotalCapacityPods                  resource.Quantity
+	TotalCapacityCPU                   resource.Quantity
+	TotalCapacityCPUCores              float64
+	TotalCapacityMemory                resource.Quantity
+	TotalCapacityMemoryGiB             float64
+	TotalCapacityEphemeralStorage      resource.Quantity
+	TotalCapacityEphemeralStorageGB    float64
+	TotalAllocatablePods               resource.Quantity
+	TotalAllocatableCPU                resource.Quantity
+	TotalAllocatableCPUCores           float64
+	TotalAllocatableMemory             resource.Quantity
+	TotalAllocatableMemoryGiB          float64
+	TotalAllocatableEphemeralStorage   resource.Quantity
+	TotalAllocatableEphemeralStorageGB float64
+	TotalAvailablePods                 int
+	TotalRequestsCPU                   resource.Quantity
+	TotalRequestsCPUCores              float64
+	TotalLimitsCPU                     resource.Quantity
+	TotalLimitsCPUCores                float64
+	TotalAvailableCPU                  resource.Quantity
+	TotalAvailableCPUCores             float64
+	TotalRequestsMemory                resource.Quantity
+	TotalRequestsMemoryGiB             float64
+	TotalLimitsMemory                  resource.Quantity
+	TotalLimitsMemoryGiB               float64
+	TotalAvailableMemory               resource.Quantity
+	TotalAvailableMemoryGiB            float64
+	TotalRequestsEphemeralStorage      resource.Quantity
+	TotalRequestsEphemeralStorageGB    float64
+	TotalLimitsEphemeralStorage        resource.Quantity
+	TotalLimitsEphemeralStorageGB      float64
+	TotalAvailableEphemeralStorage     resource.Quantity
+	TotalAvailableEphemeralStorageGB   float64
 }
 
 type NamespaceCapacityData struct {
@@ -196,7 +206,7 @@ func DisplayClusterData(clusterCapacityData ClusterCapacityData, displayDefault 
 	}
 }
 
-func DisplayNodeRoleData(nodeRoleCapacityData map[string]*ClusterCapacityData, sortedRoleNames []string, displayDefault bool, displayHeaders bool, displayFormat string) {
+func DisplayNodeRoleData(nodeRoleCapacityData map[string]*ClusterCapacityData, sortedRoleNames []string, displayDefault bool, displayHeaders bool, displayEphemeralStorage bool, displayFormat string) {
 	switch displayFormat {
 	case jsonDisplay:
 		jsonNodeRoleData, err := json.MarshalIndent(&nodeRoleCapacityData, "", "  ")
@@ -217,11 +227,24 @@ func DisplayNodeRoleData(nodeRoleCapacityData map[string]*ClusterCapacityData, s
 		w.Init(os.Stdout, 0, 5, 1, ' ', 0)
 		if displayHeaders {
 			if displayDefault {
-				fmt.Fprintln(w, "ROLE\tNODES\t\t\t\tPODS\t\t\t\t\tCPU\t\t\t\t\tMEMORY\t\t\t")
+				fmt.Fprintf(w, "ROLE\tNODES\t\t\t\tPODS\t\t\t\t\tCPU\t\t\t\t\tMEMORY\t\t\t\t\t")
+				if displayEphemeralStorage {
+					fmt.Fprintf(w, "EPHEMERAL STORAGE")
+				}
+				fmt.Fprintln(w, "")
 			} else {
-				fmt.Fprintln(w, "ROLE\tNODES\t\t\t\tPODS\t\t\t\t\tCPU (cores)\t\t\t\t\tMEMORY (GiB)\t\t\t")
+				fmt.Fprintf(w, "ROLE\tNODES\t\t\t\tPODS\t\t\t\t\tCPU (cores)\t\t\t\t\tMEMORY (GiB)\t\t\t\t\t")
+				if displayEphemeralStorage {
+					fmt.Fprintf(w, "EPHEMERAL STORAGE (GB)")
+				}
+				fmt.Fprintln(w, "")
 			}
-			fmt.Fprintln(w, "\tTotal\tReady\tUnready\tUnsch\tCapacity\tAllocatable\tTotal\tNon-Term\tAvail\tCapacity\tAllocatable\tRequests\tLimits\tAvail\tCapacity\tAllocatable\tRequests\tLimits\tAvail")
+			fmt.Fprintf(w, "\tTotal\tReady\tUnready\tUnsch\tCapacity\tAllocatable\tTotal\tNon-Term\tAvail\tCapacity\tAllocatable\tRequests\tLimits\tAvail\tCapacity\tAllocatable\tRequests\tLimits\tAvail\t")
+			if displayEphemeralStorage {
+				fmt.Fprintln(w, "Capacity\tAllocatable\tRequests\tLimits\tAvail")
+			} else {
+				fmt.Fprintln(w, "")
+			}
 		}
 		for _, k := range sortedRoleNames {
 			fmt.Fprintf(w, "%s\t", k)
@@ -235,14 +258,24 @@ func DisplayNodeRoleData(nodeRoleCapacityData map[string]*ClusterCapacityData, s
 				fmt.Fprintf(w, "%s\t", &nodeRoleCapacityData[k].TotalAvailableCPU)
 				fmt.Fprintf(w, "%s\t%s\t", &nodeRoleCapacityData[k].TotalCapacityMemory, &nodeRoleCapacityData[k].TotalAllocatableMemory)
 				fmt.Fprintf(w, "%s\t%s\t", &nodeRoleCapacityData[k].TotalRequestsMemory, &nodeRoleCapacityData[k].TotalLimitsMemory)
-				fmt.Fprintf(w, "%s\t\n", &nodeRoleCapacityData[k].TotalAvailableMemory)
+				if displayEphemeralStorage {
+					fmt.Fprintf(w, "%s\t%s\t%s\t", &nodeRoleCapacityData[k].TotalAvailableMemory, &nodeRoleCapacityData[k].TotalCapacityEphemeralStorage, &nodeRoleCapacityData[k].TotalAllocatableEphemeralStorage)
+					fmt.Fprintf(w, "%s\t%s\t%s\t\n", &nodeRoleCapacityData[k].TotalRequestsEphemeralStorage, &nodeRoleCapacityData[k].TotalLimitsEphemeralStorage, &nodeRoleCapacityData[k].TotalAvailableEphemeralStorage)
+				} else {
+					fmt.Fprintf(w, "%s\t\n", &nodeRoleCapacityData[k].TotalAvailableMemory)
+				}
 			} else {
 				fmt.Fprintf(w, "%.1f\t%.1f\t", nodeRoleCapacityData[k].TotalCapacityCPUCores, nodeRoleCapacityData[k].TotalAllocatableCPUCores)
 				fmt.Fprintf(w, "%.1f\t%.1f\t", nodeRoleCapacityData[k].TotalRequestsCPUCores, nodeRoleCapacityData[k].TotalLimitsCPUCores)
 				fmt.Fprintf(w, "%.1f\t", nodeRoleCapacityData[k].TotalAvailableCPUCores)
 				fmt.Fprintf(w, "%.1f\t%.1f\t", nodeRoleCapacityData[k].TotalCapacityMemoryGiB, nodeRoleCapacityData[k].TotalAllocatableMemoryGiB)
 				fmt.Fprintf(w, "%.1f\t%.1f\t", nodeRoleCapacityData[k].TotalRequestsMemoryGiB, nodeRoleCapacityData[k].TotalLimitsMemoryGiB)
-				fmt.Fprintf(w, "%.1f\t\n", nodeRoleCapacityData[k].TotalAvailableMemoryGiB)
+				if displayEphemeralStorage {
+					fmt.Fprintf(w, "%.1f\t%.1f\t%.1f\t", nodeRoleCapacityData[k].TotalAvailableMemoryGiB, nodeRoleCapacityData[k].TotalCapacityEphemeralStorageGB, nodeRoleCapacityData[k].TotalAllocatableEphemeralStorageGB)
+					fmt.Fprintf(w, "%.1f\t%.1f\t%.1f\t\n", nodeRoleCapacityData[k].TotalRequestsEphemeralStorageGB, nodeRoleCapacityData[k].TotalLimitsEphemeralStorageGB, nodeRoleCapacityData[k].TotalAvailableEphemeralStorageGB)
+				} else {
+					fmt.Fprintf(w, "%.1f\t\n", nodeRoleCapacityData[k].TotalAvailableMemoryGiB)
+				}
 			}
 		}
 		w.Flush()
