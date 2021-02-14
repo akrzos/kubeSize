@@ -222,7 +222,7 @@ var nodeCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(nodeCmd)
-	nodeCmd.Flags().BoolP("ephemeral-storage", "e", false, "Display ephemeral storage")
+	nodeCmd.Flags().BoolP("ephemeral-storage", "e", false, "Include ephemeral storage capacity data in table output")
 	nodeCmd.Flags().BoolP("sort-by-role", "r", false, "Sort output by node-role")
 	nodeCmd.Flags().BoolP("display-total", "t", false, "Display sum of all node capacity data in table output")
 	nodeCmd.Flags().BoolP("unassigned", "u", false, "Include unassigned pod row, pods which do not have a node")

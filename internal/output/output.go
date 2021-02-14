@@ -120,17 +120,21 @@ type NodeCapacityData struct {
 }
 
 type NamespaceCapacityData struct {
-	TotalPodCount               int
-	TotalNonTermPodCount        int
-	TotalUnassignedNodePodCount int
-	TotalRequestsCPU            resource.Quantity
-	TotalRequestsCPUCores       float64
-	TotalLimitsCPU              resource.Quantity
-	TotalLimitsCPUCores         float64
-	TotalRequestsMemory         resource.Quantity
-	TotalRequestsMemoryGiB      float64
-	TotalLimitsMemory           resource.Quantity
-	TotalLimitsMemoryGiB        float64
+	TotalPodCount                   int
+	TotalNonTermPodCount            int
+	TotalUnassignedNodePodCount     int
+	TotalRequestsCPU                resource.Quantity
+	TotalRequestsCPUCores           float64
+	TotalLimitsCPU                  resource.Quantity
+	TotalLimitsCPUCores             float64
+	TotalRequestsMemory             resource.Quantity
+	TotalRequestsMemoryGiB          float64
+	TotalLimitsMemory               resource.Quantity
+	TotalLimitsMemoryGiB            float64
+	TotalRequestsEphemeralStorage   resource.Quantity
+	TotalRequestsEphemeralStorageGB float64
+	TotalLimitsEphemeralStorage     resource.Quantity
+	TotalLimitsEphemeralStorageGB   float64
 }
 
 func DisplayClusterData(clusterCapacityData ClusterCapacityData, displayDefault bool, displayHeaders bool, displayEphemeralStorage bool, displayFormat string) {
@@ -394,7 +398,7 @@ func printNodeData(w *tabwriter.Writer, nodeName string, nodeData *NodeCapacityD
 	}
 }
 
-func DisplayNamespaceData(namespaceCapacityData map[string]*NamespaceCapacityData, sortedNamespaceNames []string, displayDefault bool, displayHeaders bool, displayFormat string, displayAllNamespaces bool) {
+func DisplayNamespaceData(namespaceCapacityData map[string]*NamespaceCapacityData, sortedNamespaceNames []string, displayDefault bool, displayHeaders bool, displayEphemeralStorage bool, displayFormat string, displayAllNamespaces bool) {
 	switch displayFormat {
 	case jsonDisplay:
 		jsonNamespaceData, err := json.MarshalIndent(&namespaceCapacityData, "", "  ")
@@ -415,11 +419,23 @@ func DisplayNamespaceData(namespaceCapacityData map[string]*NamespaceCapacityDat
 		w.Init(os.Stdout, 0, 5, 1, ' ', 0)
 		if displayHeaders {
 			if displayDefault {
-				fmt.Fprintln(w, "NAMESPACE\tPODS\t\t\tCPU\t\tMEMORY\t\t")
+				fmt.Fprintf(w, "NAMESPACE\tPODS\t\t\tCPU\t\tMEMORY\t\t")
+				if displayEphemeralStorage {
+					fmt.Fprintf(w, "EPHEMERAL STORAGE")
+				}
+				fmt.Fprintln(w, "")
 			} else {
-				fmt.Fprintln(w, "NAMESPACE\tPODS\t\t\tCPU (cores)\t\tMEMORY (GiB)\t\t")
+				fmt.Fprintf(w, "NAMESPACE\tPODS\t\t\tCPU (cores)\t\tMEMORY (GiB)\t\t")
+				if displayEphemeralStorage {
+					fmt.Fprintf(w, "EPHEMERAL STORAGE (GB)")
+				}
+				fmt.Fprintln(w, "")
 			}
-			fmt.Fprintln(w, "\tTotal\tNon-Term\tUnassigned\tRequests\tLimits\tRequests\tLimits")
+			fmt.Fprintf(w, "\tTotal\tNon-Term\tUnassigned\tRequests\tLimits\tRequests\tLimits\t")
+			if displayEphemeralStorage {
+				fmt.Fprintf(w, "Requests\tLimits")
+			}
+			fmt.Fprintln(w, "")
 		}
 		for _, k := range sortedNamespaceNames {
 			if (namespaceCapacityData[k].TotalPodCount != 0) || displayAllNamespaces {
@@ -427,10 +443,18 @@ func DisplayNamespaceData(namespaceCapacityData map[string]*NamespaceCapacityDat
 				fmt.Fprintf(w, "%d\t%d\t%d\t", namespaceCapacityData[k].TotalPodCount, namespaceCapacityData[k].TotalNonTermPodCount, namespaceCapacityData[k].TotalUnassignedNodePodCount)
 				if displayDefault {
 					fmt.Fprintf(w, "%s\t%s\t", &namespaceCapacityData[k].TotalRequestsCPU, &namespaceCapacityData[k].TotalLimitsCPU)
-					fmt.Fprintf(w, "%s\t%s\t\n", &namespaceCapacityData[k].TotalRequestsMemory, &namespaceCapacityData[k].TotalLimitsMemory)
+					fmt.Fprintf(w, "%s\t%s\t", &namespaceCapacityData[k].TotalRequestsMemory, &namespaceCapacityData[k].TotalLimitsMemory)
+					if displayEphemeralStorage {
+						fmt.Fprintf(w, "%s\t%s\t", &namespaceCapacityData[k].TotalRequestsEphemeralStorage, &namespaceCapacityData[k].TotalLimitsEphemeralStorage)
+					}
+					fmt.Fprintln(w, "")
 				} else {
 					fmt.Fprintf(w, "%.1f\t%.1f\t", namespaceCapacityData[k].TotalRequestsCPUCores, namespaceCapacityData[k].TotalLimitsCPUCores)
-					fmt.Fprintf(w, "%.1f\t%.1f\t\n", namespaceCapacityData[k].TotalRequestsMemoryGiB, namespaceCapacityData[k].TotalLimitsMemoryGiB)
+					fmt.Fprintf(w, "%.1f\t%.1f\t", namespaceCapacityData[k].TotalRequestsMemoryGiB, namespaceCapacityData[k].TotalLimitsMemoryGiB)
+					if displayEphemeralStorage {
+						fmt.Fprintf(w, "%.1f\t%.1f\t", namespaceCapacityData[k].TotalRequestsEphemeralStorageGB, namespaceCapacityData[k].TotalLimitsEphemeralStorageGB)
+					}
+					fmt.Fprintln(w, "")
 				}
 			}
 		}

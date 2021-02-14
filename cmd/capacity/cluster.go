@@ -146,5 +146,5 @@ var clusterCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(clusterCmd)
-	clusterCmd.Flags().BoolP("ephemeral-storage", "e", false, "Display ephemeral storage")
+	clusterCmd.Flags().BoolP("ephemeral-storage", "e", false, "Include ephemeral storage capacity data in table output")
 }

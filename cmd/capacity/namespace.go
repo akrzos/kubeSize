@@ -99,6 +99,8 @@ var namespaceCmd = &cobra.Command{
 					namespaceCapacityData[pod.Namespace].TotalLimitsCPU.Add(*container.Resources.Limits.Cpu())
 					namespaceCapacityData[pod.Namespace].TotalRequestsMemory.Add(*container.Resources.Requests.Memory())
 					namespaceCapacityData[pod.Namespace].TotalLimitsMemory.Add(*container.Resources.Limits.Memory())
+					namespaceCapacityData[pod.Namespace].TotalRequestsEphemeralStorage.Add(*container.Resources.Requests.StorageEphemeral())
+					namespaceCapacityData[pod.Namespace].TotalLimitsEphemeralStorage.Add(*container.Resources.Limits.StorageEphemeral())
 				}
 			}
 		}
@@ -111,6 +113,8 @@ var namespaceCmd = &cobra.Command{
 			namespaceCapacityData[namespace].TotalLimitsCPUCores = capacity.ReadableCPU(namespaceCapacityData[namespace].TotalLimitsCPU)
 			namespaceCapacityData[namespace].TotalRequestsMemoryGiB = capacity.ReadableMem(namespaceCapacityData[namespace].TotalRequestsMemory)
 			namespaceCapacityData[namespace].TotalLimitsMemoryGiB = capacity.ReadableMem(namespaceCapacityData[namespace].TotalLimitsMemory)
+			namespaceCapacityData[namespace].TotalRequestsEphemeralStorageGB = capacity.ReadableStorage(namespaceCapacityData[namespace].TotalRequestsEphemeralStorage)
+			namespaceCapacityData[namespace].TotalLimitsEphemeralStorageGB = capacity.ReadableStorage(namespaceCapacityData[namespace].TotalLimitsEphemeralStorage)
 			namespaceCapacityData["*total*"].TotalPodCount += namespaceCapacityData[namespace].TotalPodCount
 			namespaceCapacityData["*total*"].TotalNonTermPodCount += namespaceCapacityData[namespace].TotalNonTermPodCount
 			namespaceCapacityData["*total*"].TotalUnassignedNodePodCount += namespaceCapacityData[namespace].TotalUnassignedNodePodCount
@@ -122,11 +126,17 @@ var namespaceCmd = &cobra.Command{
 			namespaceCapacityData["*total*"].TotalRequestsMemoryGiB += namespaceCapacityData[namespace].TotalRequestsMemoryGiB
 			namespaceCapacityData["*total*"].TotalLimitsMemory.Add(namespaceCapacityData[namespace].TotalLimitsMemory)
 			namespaceCapacityData["*total*"].TotalLimitsMemoryGiB += namespaceCapacityData[namespace].TotalLimitsMemoryGiB
+			namespaceCapacityData["*total*"].TotalRequestsEphemeralStorage.Add(namespaceCapacityData[namespace].TotalRequestsEphemeralStorage)
+			namespaceCapacityData["*total*"].TotalRequestsEphemeralStorageGB += namespaceCapacityData[namespace].TotalRequestsEphemeralStorageGB
+			namespaceCapacityData["*total*"].TotalLimitsEphemeralStorage.Add(namespaceCapacityData[namespace].TotalLimitsEphemeralStorage)
+			namespaceCapacityData["*total*"].TotalLimitsEphemeralStorageGB += namespaceCapacityData[namespace].TotalLimitsEphemeralStorageGB
 		}
 
 		sort.Strings(namespaceNames)
 
 		displayDefault, _ := cmd.Flags().GetBool("default-format")
+
+		displayEphemeralStorage, _ := cmd.Flags().GetBool("ephemeral-storage")
 
 		displayNoHeaders, _ := cmd.Flags().GetBool("no-headers")
 
@@ -140,7 +150,7 @@ var namespaceCmd = &cobra.Command{
 			namespaceNames = append(namespaceNames, "*total*")
 		}
 
-		output.DisplayNamespaceData(namespaceCapacityData, namespaceNames, displayDefault, !displayNoHeaders, displayFormat, displayAllNamespaces)
+		output.DisplayNamespaceData(namespaceCapacityData, namespaceNames, displayDefault, !displayNoHeaders, displayEphemeralStorage, displayFormat, displayAllNamespaces)
 
 		return nil
 	},
@@ -149,5 +159,6 @@ var namespaceCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(namespaceCmd)
 	namespaceCmd.Flags().BoolP("all-namespaces", "A", false, "Include 0 pod namespaces in table output")
+	namespaceCmd.Flags().BoolP("ephemeral-storage", "e", false, "Include ephemeral storage capacity data in table output")
 	namespaceCmd.Flags().BoolP("display-total", "t", false, "Display sum of all namespace capacity data in table output")
 }

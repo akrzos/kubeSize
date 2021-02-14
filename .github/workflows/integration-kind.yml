@@ -38,3 +38,4 @@ jobs:
         bin/kubectl-capacity no
         bin/kubectl-capacity no -e
         bin/kubectl-capacity ns
+        bin/kubectl-capacity ns -e
