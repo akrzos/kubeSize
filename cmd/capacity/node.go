@@ -100,9 +100,8 @@ var nodeCmd = &cobra.Command{
 			nodesCapacityData[node.Name].TotalAllocatableCPU.Add(*node.Status.Allocatable.Cpu())
 			nodesCapacityData[node.Name].TotalAllocatableMemory.Add(*node.Status.Allocatable.Memory())
 			nodesCapacityData[node.Name].TotalAllocatableEphemeralStorage.Add(*node.Status.Allocatable.StorageEphemeral())
-			for _, role := range roles.List() {
-				nodesByRole[role] = append(nodesByRole[role], node.Name)
-			}
+			rolesIndex := strings.Join(roles.List(), ",")
+			nodesByRole[rolesIndex] = append(nodesByRole[rolesIndex], node.Name)
 		}
 		nodesCapacityData["*unassigned*"] = new(output.NodeCapacityData)
 		nodesCapacityData["*total*"] = new(output.NodeCapacityData)
