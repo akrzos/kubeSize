@@ -6,7 +6,6 @@ kubeSize is a kubernetes CLI plugin to easily aggregate sizing and capacity data
 
 - [Install](#install)
   - [Download](#download)
-  - [Krew](#krew)
   - [Compile](#compile)
 - [Usage](#usage)
   - [Cluster](#cluster)
@@ -23,31 +22,13 @@ kubeSize is a kubernetes CLI plugin to easily aggregate sizing and capacity data
 Linux
 
 ```console
-curl -L https://github.com/akrzos/kubeSize/releases/download/v0.1.4/kubeSize_0.1.4_Linux_x86_64.tar.gz | tar xvz -C /usr/local/bin kubectl-capacity
+curl -L https://github.com/akrzos/kubeSize/releases/download/v0.1.5/kubeSize_0.1.5_Linux_x86_64.tar.gz | tar xvz -C /usr/local/bin kubectl-capacity
 ```
 
 Mac
 
 ```console
-curl -L https://github.com/akrzos/kubeSize/releases/download/v0.1.4/kubeSize_0.1.4_macOS_x86_64.tar.gz | tar xvz - -C /usr/local/bin kubectl-capacity
-```
-
-### Krew
-
-If you have [krew](https://krew.sigs.k8s.io/) installed, you can install this plugin with the krew plugin yaml.
-
-```console
-$ kubectl krew install --manifest-url=https://raw.githubusercontent.com/akrzos/kubeSize/main/deploy/krew/capacity.yaml
-Updated the local copy of plugin index.
-Installing plugin: capacity
-Installed plugin: capacity
-\
- | Use this plugin:
- |      kubectl capacity
- | Documentation:
- |      https://github.com/akrzos/kubeSize
-/
-$ kubectl capacity
+curl -L https://github.com/akrzos/kubeSize/releases/download/v0.1.5/kubeSize_0.1.5_macOS_x86_64.tar.gz | tar xvz - -C /usr/local/bin kubectl-capacity
 ```
 
 ### Compile
