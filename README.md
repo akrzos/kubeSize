@@ -2,6 +2,13 @@
 
 kubeSize is a kubernetes CLI plugin to easily aggregate sizing and capacity data for a Kubernetes cluster.
 
+```console
+$ kubectl capacity cluster
+NODES                     PODS                                      CPU (cores)                                   MEMORY (GiB)
+Total Ready Unready Unsch Capacity Allocatable Total Non-Term Avail Capacity    Allocatable Requests Limits Avail Capacity     Allocatable Requests Limits Avail
+3     3     0       0     330      330         13    13       317   12.0        12.0        1.1      0.3    10.8  5.8          5.8         0.4      0.5    5.4
+```
+
 ## Table of Contents
 
 - [Install](#install)
@@ -12,6 +19,7 @@ kubeSize is a kubernetes CLI plugin to easily aggregate sizing and capacity data
   - [Node-Role](#node-role)
   - [Node](#node)
   - [Namespace](#namespace)
+  - [Size](#size)
   - [Output formats](#output-formats)
 - [License](#license)
 
@@ -68,6 +76,7 @@ kubectl capacity c    # cluster
 kubectl capacity nr   # node-role
 kubectl capacity no   # node
 kubectl capacity ns   # namespace
+kubectl capacity s    # size
 ```
 
 ### Cluster
@@ -140,6 +149,29 @@ Flags:
 - `-e, --ephemeral-storage` flag includes ephemeral storage capacity data in table output view.
 - `-n, --namespace string` flag selects a specific namespace.
 - `-t, --display-total` flag includes a row of data displaying totals for each column.
+
+### Size
+
+Cluster "size" data to include counts of objects.
+
+```console
+$ kubectl capacity size
+CLUSTER APIs
+Namespaces Nodes PersistentVolumes ServiceAccounts ClusterRoles ClusterRoleBindings Roles RoleBindings ResourceQuotas NetworkPolicies
+5          3     0                 39              64           49                  11    11           0              0
+WORKLOAD APIs
+Containers Pods ReplicaSets ReplicationControllers Deployments DaemonSets StatefulSets CronJobs Jobs
+13         13   2           0                      2           2          0            0        0
+SERVICE APIs
+Endpoints Ingresses Services
+3         0         2
+CONFIG And STORAGE APIs
+ConfigMaps Secrets PersistentVolumeClaims StorageClasses Volumes VolumeAttachments
+12         40      0                      1              0
+METADATA APIs
+Events LimitRanges PodDisruptionBudgets PodSecurityPolicies
+0      0           0                    0
+```
 
 ### Output formats
 
