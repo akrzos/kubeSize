@@ -16,6 +16,7 @@ limitations under the License.
 package capacity
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -47,131 +48,131 @@ var sizeCmd = &cobra.Command{
 		clusterSizeData := new(output.ClusterSizeData)
 
 		// Cluster APIs
-		namespaces, err := clientset.CoreV1().Namespaces().List(metav1.ListOptions{})
+		namespaces, err := clientset.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list namespaces")
 		}
-		nodes, err := clientset.CoreV1().Nodes().List(metav1.ListOptions{})
+		nodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list nodes")
 		}
-		persistentVolumes, err := clientset.CoreV1().PersistentVolumes().List(metav1.ListOptions{})
+		persistentVolumes, err := clientset.CoreV1().PersistentVolumes().List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list persistent volumes")
 		}
-		serviceAccounts, err := clientset.CoreV1().ServiceAccounts("").List(metav1.ListOptions{})
+		serviceAccounts, err := clientset.CoreV1().ServiceAccounts("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list service accounts")
 		}
-		clusterRoles, err := clientset.RbacV1().ClusterRoles().List(metav1.ListOptions{})
+		clusterRoles, err := clientset.RbacV1().ClusterRoles().List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list cluster roles")
 		}
-		clusterRoleBindings, err := clientset.RbacV1().ClusterRoleBindings().List(metav1.ListOptions{})
+		clusterRoleBindings, err := clientset.RbacV1().ClusterRoleBindings().List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list cluster role bindings")
 		}
-		roles, err := clientset.RbacV1().Roles("").List(metav1.ListOptions{})
+		roles, err := clientset.RbacV1().Roles("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list roles")
 		}
-		roleBindings, err := clientset.RbacV1().RoleBindings("").List(metav1.ListOptions{})
+		roleBindings, err := clientset.RbacV1().RoleBindings("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list role bindings")
 		}
-		resourceQuotas, err := clientset.CoreV1().ResourceQuotas("").List(metav1.ListOptions{})
+		resourceQuotas, err := clientset.CoreV1().ResourceQuotas("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list resourcequotas")
 		}
-		networkPolicy, err := clientset.NetworkingV1().NetworkPolicies("").List(metav1.ListOptions{})
+		networkPolicy, err := clientset.NetworkingV1().NetworkPolicies("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list networkpolicy")
 		}
 
 		// Workloads APIs
-		pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
+		pods, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list pods")
 		}
-		replicaSets, err := clientset.AppsV1().ReplicaSets("").List(metav1.ListOptions{})
+		replicaSets, err := clientset.AppsV1().ReplicaSets("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list replicasets")
 		}
-		replicationControllers, err := clientset.CoreV1().ReplicationControllers("").List(metav1.ListOptions{})
+		replicationControllers, err := clientset.CoreV1().ReplicationControllers("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list replication controllers")
 		}
-		deployments, err := clientset.AppsV1().Deployments("").List(metav1.ListOptions{})
+		deployments, err := clientset.AppsV1().Deployments("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list deployments")
 		}
-		daemonsets, err := clientset.AppsV1().DaemonSets("").List(metav1.ListOptions{})
+		daemonsets, err := clientset.AppsV1().DaemonSets("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list daemonsets")
 		}
-		statefulSets, err := clientset.AppsV1().StatefulSets("").List(metav1.ListOptions{})
+		statefulSets, err := clientset.AppsV1().StatefulSets("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list statefulsets")
 		}
-		cronJobs, err := clientset.BatchV1beta1().CronJobs("").List(metav1.ListOptions{})
+		cronJobs, err := clientset.BatchV1beta1().CronJobs("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list jobs")
 		}
-		jobs, err := clientset.BatchV1().Jobs("").List(metav1.ListOptions{})
+		jobs, err := clientset.BatchV1().Jobs("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list jobs")
 		}
 
 		// Service APIs
-		endPoints, err := clientset.CoreV1().Endpoints("").List(metav1.ListOptions{})
+		endPoints, err := clientset.CoreV1().Endpoints("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list end points")
 		}
-		services, err := clientset.CoreV1().Services("").List(metav1.ListOptions{})
+		services, err := clientset.CoreV1().Services("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list services")
 		}
-		ingresses, err := clientset.NetworkingV1beta1().Ingresses("").List(metav1.ListOptions{})
+		ingresses, err := clientset.NetworkingV1().Ingresses("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list ingresses")
 		}
 
 		// Config And Storage APIs
-		configmaps, err := clientset.CoreV1().ConfigMaps("").List(metav1.ListOptions{})
+		configmaps, err := clientset.CoreV1().ConfigMaps("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list configmaps")
 		}
-		secrets, err := clientset.CoreV1().Secrets("").List(metav1.ListOptions{})
+		secrets, err := clientset.CoreV1().Secrets("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list secrets")
 		}
-		persistentVolumeClaims, err := clientset.CoreV1().PersistentVolumeClaims("").List(metav1.ListOptions{})
+		persistentVolumeClaims, err := clientset.CoreV1().PersistentVolumeClaims("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list persistentvolumesclaims")
 		}
-		storageClasses, err := clientset.StorageV1().StorageClasses().List(metav1.ListOptions{})
+		storageClasses, err := clientset.StorageV1().StorageClasses().List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list storageclasses")
 		}
-		volumeAttachments, err := clientset.StorageV1().VolumeAttachments().List(metav1.ListOptions{})
+		volumeAttachments, err := clientset.StorageV1().VolumeAttachments().List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list storageclasses")
 		}
 
 		// Metadata APIs
-		events, err := clientset.CoreV1().Events("").List(metav1.ListOptions{})
+		events, err := clientset.CoreV1().Events("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list events")
 		}
-		limitRanges, err := clientset.CoreV1().LimitRanges("").List(metav1.ListOptions{})
+		limitRanges, err := clientset.CoreV1().LimitRanges("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list limitrange")
 		}
-		podDisruptionBudget, err := clientset.PolicyV1beta1().PodDisruptionBudgets("").List(metav1.ListOptions{})
+		podDisruptionBudget, err := clientset.PolicyV1beta1().PodDisruptionBudgets("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list poddisruptionbudget")
 		}
-		podSecurityPolicy, err := clientset.PolicyV1beta1().PodSecurityPolicies().List(metav1.ListOptions{})
+		podSecurityPolicy, err := clientset.PolicyV1beta1().PodSecurityPolicies().List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list podsecuritypolicy")
 		}

@@ -16,6 +16,7 @@ limitations under the License.
 package capacity
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -47,12 +48,12 @@ var clusterCmd = &cobra.Command{
 			return errors.Wrap(err, "failed to create clientset")
 		}
 
-		nodes, err := clientset.CoreV1().Nodes().List(metav1.ListOptions{})
+		nodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list nodes")
 		}
 
-		totalPodsList, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
+		totalPodsList, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list pods")
 		}
@@ -62,7 +63,7 @@ var clusterCmd = &cobra.Command{
 		if err != nil {
 			return errors.Wrap(err, "failed to create fieldSelector")
 		}
-		totalNonTermPodsList, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{FieldSelector: fieldSelector.String()})
+		totalNonTermPodsList, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{FieldSelector: fieldSelector.String()})
 		if err != nil {
 			return errors.Wrap(err, "failed to list non-term pods")
 		}

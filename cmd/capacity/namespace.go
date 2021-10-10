@@ -16,6 +16,7 @@ limitations under the License.
 package capacity
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"sort"
@@ -65,12 +66,12 @@ var namespaceCmd = &cobra.Command{
 			podListOptions = metav1.ListOptions{FieldSelector: podNamespaceFieldSelector.String()}
 		}
 
-		namespaces, err := clientset.CoreV1().Namespaces().List(nsListOptions)
+		namespaces, err := clientset.CoreV1().Namespaces().List(context.TODO(), nsListOptions)
 		if err != nil {
 			return errors.Wrap(err, "failed to list namespaces")
 		}
 
-		pods, err := clientset.CoreV1().Pods("").List(podListOptions)
+		pods, err := clientset.CoreV1().Pods("").List(context.TODO(), podListOptions)
 		if err != nil {
 			return errors.Wrap(err, "failed to list pods")
 		}

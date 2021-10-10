@@ -16,6 +16,7 @@ limitations under the License.
 package capacity
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"sort"
@@ -49,12 +50,12 @@ var nodeCmd = &cobra.Command{
 			return errors.Wrap(err, "failed to create clientset")
 		}
 
-		nodes, err := clientset.CoreV1().Nodes().List(metav1.ListOptions{})
+		nodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list nodes")
 		}
 
-		pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
+		pods, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to list pods")
 		}
